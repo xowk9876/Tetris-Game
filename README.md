@@ -89,11 +89,3 @@ Tetris-Game-main/
 ## 📄 라이선스
 
 [MIT License](LICENSE)
-
----
-
-### 📱 Instagram
-
-<a href="https://www.instagram.com/tae_system/" target="_blank">
-  <img src="https://raw.githubusercontent.com/rahuldkjain/github-profile-readme-generator/master/src/images/icons/Social/instagram.svg" alt="Instagram" width="32" height="32" style="vertical-align: middle;" /> @tae_system
-</a>
