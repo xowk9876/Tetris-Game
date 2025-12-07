@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>테트리스 - Tetris Game</title>
+    <script src="https://cdn.jsdelivr.net/npm/phaser@3.70.0/dist/phaser.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Exo+2:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --secondary-gradient: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            --accent-gradient: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            --success-gradient: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+            --warning-gradient: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+            --glass-bg: rgba(255, 255, 255, 0.1);
+            --glass-border: rgba(255, 255, 255, 0.2);
+            --neon-blue: #00f5ff;
+            --neon-pink: #ff0080;
+            --neon-green: #00ff41;
+            --neon-purple: #bf00ff;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Exo 2', sans-serif;
+            background: var(--primary-gradient);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* 배경 애니메이션 */
+        body::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: 
+                radial-gradient(circle at 20% 80%, rgba(120, 119, 198, 0.3) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(255, 119, 198, 0.3) 0%, transparent 50%),
+                radial-gradient(circle at 40% 40%, rgba(120, 219, 255, 0.2) 0%, transparent 50%);
+            animation: backgroundShift 20s ease-in-out infinite;
+        }
+
+        @keyframes backgroundShift {
+            0%, 100% { transform: translateX(0) translateY(0); }
+            25% { transform: translateX(-10px) translateY(-10px); }
+            50% { transform: translateX(10px) translateY(-5px); }
+            75% { transform: translateX(-5px) translateY(10px); }
+        }
+
+        #game-container {
+            position: relative;
+            z-index: 10;
+            border-radius: 24px;
+            overflow: hidden;
+            box-shadow: 
+                0 25px 50px -12px rgba(0, 0, 0, 0.8),
+                0 0 0 2px rgba(0, 245, 255, 0.3),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1),
+                0 0 60px rgba(0, 245, 255, 0.2);
+            backdrop-filter: blur(20px);
+            background: rgba(15, 15, 35, 0.95);
+            border: 2px solid rgba(0, 245, 255, 0.2);
+        }
+
+        /* 상단 HUD */
+        .game-hud {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1000;
+            display: flex;
+            gap: 30px;
+            align-items: center;
+        }
+
+        .hud-panel {
+            background: var(--glass-bg);
+            backdrop-filter: blur(15px);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            padding: 10px 18px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s ease;
+            min-width: 90px;
+        }
+
+        .hud-panel:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+        }
+
+        .hud-label {
+            font-family: 'Orbitron', monospace;
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            margin-bottom: 3px;
+            text-align: center;
+        }
+
+        .hud-value {
+            font-family: 'Orbitron', monospace;
+            color: var(--neon-blue);
+            font-size: 18px;
+            font-weight: 900;
+            text-align: center;
+            text-shadow: 0 0 15px var(--neon-blue);
+            filter: drop-shadow(0 0 8px var(--neon-blue));
+        }
+
+        .level-indicator {
+            background: var(--accent-gradient);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: 700;
+            font-size: 14px;
+            box-shadow: 0 4px 15px rgba(79, 172, 254, 0.4);
+        }
+
+        /* 속도 조절 UI */
+        .speed-control {
+            position: absolute;
+            top: 20px;
+            right: 200px;  /* 값이 클수록 왼쪽으로 이동 (20px → 100px) */
+            z-index: 1000;
+            background: var(--glass-bg);
+            backdrop-filter: blur(15px);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            padding: 12px 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            min-width: 180px;
+        }
+
+        .speed-control-label {
+            font-family: 'Orbitron', monospace;
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            text-align: center;
+        }
+
+        .speed-slider-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .speed-slider {
+            flex: 1;
+            height: 6px;
+            border-radius: 3px;
+            background: rgba(0, 245, 255, 0.2);
+            outline: none;
+            -webkit-appearance: none;
+            appearance: none;
+        }
+
+        .speed-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: var(--neon-blue);
+            cursor: pointer;
+            box-shadow: 0 0 10px var(--neon-blue);
+            transition: all 0.2s ease;
+        }
+
+        .speed-slider::-webkit-slider-thumb:hover {
+            transform: scale(1.2);
+            box-shadow: 0 0 15px var(--neon-blue);
+        }
+
+        .speed-slider::-moz-range-thumb {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: var(--neon-blue);
+            cursor: pointer;
+            border: none;
+            box-shadow: 0 0 10px var(--neon-blue);
+            transition: all 0.2s ease;
+        }
+
+        .speed-slider::-moz-range-thumb:hover {
+            transform: scale(1.2);
+            box-shadow: 0 0 15px var(--neon-blue);
+        }
+
+        .speed-value {
+            font-family: 'Orbitron', monospace;
+            color: var(--neon-blue);
+            font-size: 14px;
+            font-weight: 700;
+            min-width: 50px;
+            text-align: center;
+            text-shadow: 0 0 10px var(--neon-blue);
+        }
+
+        /* 하단 컨트롤 */
+        .game-controls {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1000;
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .control-btn {
+            background: var(--glass-bg);
+            backdrop-filter: blur(15px);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            padding: 12px 20px;
+            color: white;
+            font-family: 'Exo 2', sans-serif;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .control-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .control-btn:hover::before {
+            left: 100%;
+        }
+
+        .control-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+            border-color: var(--neon-blue);
+        }
+
+        .primary-btn {
+            background: var(--accent-gradient);
+            box-shadow: 0 4px 15px rgba(79, 172, 254, 0.4);
+        }
+
+        .secondary-btn {
+            background: var(--warning-gradient);
+            box-shadow: 0 4px 15px rgba(250, 112, 154, 0.4);
+        }
+
+        .danger-btn {
+            background: linear-gradient(135deg, #ff416c 0%, #ff4b2b 100%);
+            box-shadow: 0 4px 15px rgba(255, 65, 108, 0.5);
+            border-color: rgba(255, 65, 108, 0.5);
+        }
+
+        .danger-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(255, 65, 108, 0.6);
+            border-color: rgba(255, 65, 108, 0.8);
+            background: linear-gradient(135deg, #ff5478 0%, #ff5c3d 100%);
+        }
+
+        /* 로딩 화면 */
+        .loading-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: var(--primary-gradient);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+            transition: opacity 0.5s ease;
+        }
+
+        .loading-screen.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .loading-spinner {
+            width: 60px;
+            height: 60px;
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-top: 4px solid var(--neon-blue);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .loading-text {
+            font-family: 'Orbitron', monospace;
+            color: white;
+            font-size: 18px;
+            font-weight: 700;
+            text-shadow: 0 0 20px var(--neon-blue);
+        }
+
+        /* 반응형 디자인 */
+        @media (max-width: 768px) {
+            .game-hud {
+                flex-direction: column;
+                gap: 8px;
+                top: 5px;
+            }
+            
+            .hud-panel {
+                padding: 8px 14px;
+                min-width: 80px;
+            }
+            
+            .hud-label {
+                font-size: 9px;
+            }
+            
+            .hud-value {
+                font-size: 16px;
+            }
+            
+            .game-controls {
+                flex-direction: column;
+                gap: 10px;
+            }
+        }
+
+        /* 성능 최적화 */
+        .game-container * {
+            will-change: transform;
+        }
+    </style>
+</head>
+<body>
+    <!-- 로딩 화면 -->
+    <div class="loading-screen" id="loading-screen">
+        <div class="loading-spinner"></div>
+        <div class="loading-text">테트리스 로딩 중...</div>
+    </div>
+
+    <!-- 게임 HUD -->
+    <div class="game-hud">
+        <div class="hud-panel">
+            <div class="hud-label">점수</div>
+            <div class="hud-value" id="current-score">0</div>
+        </div>
+        
+        <div class="hud-panel">
+            <div class="hud-label">최고점수</div>
+            <div class="hud-value" id="best-score">0</div>
+        </div>
+        
+        <div class="hud-panel">
+            <div class="hud-label">콤보</div>
+            <div class="hud-value" id="combo-count">0</div>
+        </div>
+    </div>
+
+    <!-- 게임 컨테이너 -->
+    <div id="game-container"></div>
+
+    <!-- 속도 조절 UI -->
+    <div class="speed-control">
+        <div class="speed-control-label">⚡ 낙하 속도</div>
+        <div class="speed-slider-container">
+            <input type="range" min="400" max="1200" value="800" step="50" class="speed-slider" id="speed-slider">
+            <div class="speed-value" id="speed-value">보통</div>
+        </div>
+    </div>
+
+    <!-- 게임 컨트롤 -->
+    <div class="game-controls">
+        <button class="control-btn primary-btn" id="new-game-btn">
+            🎮 새 게임
+        </button>
+        <button class="control-btn secondary-btn" id="help-btn">
+            ❓ 조작법
+        </button>
+        <button class="control-btn danger-btn" id="give-up-btn">
+            🚫 게임 포기
+        </button>
+    </div>
+
+    <!-- 조작법 모달 -->
+    <div id="help-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 2000; justify-content: center; align-items: center;">
+        <div style="background: #1a1a2e; padding: 30px; border-radius: 20px; max-width: 500px; border: 2px solid #00f5ff;">
+            <h2 style="color: #00f5ff; margin-bottom: 20px; font-family: 'Orbitron', monospace;">🎮 조작법</h2>
+            <div style="color: white; line-height: 2; font-size: 16px;">
+                <p><strong>← →</strong> : 좌우 이동</p>
+                <p><strong>↑</strong> : 블록 회전</p>
+                <p><strong>↓</strong> : 소프트 드롭 (빠른 낙하)</p>
+                <p><strong>Space</strong> : 하드 드롭 (즉시 낙하)</p>
+                <p><strong>C</strong> : 홀드 (블록 보관)</p>
+                <p><strong>P</strong> : 일시정지</p>
+            </div>
+            <button id="close-help" style="margin-top: 20px; padding: 10px 20px; background: #00f5ff; color: #0f0f23; border: none; border-radius: 10px; cursor: pointer; font-weight: bold;">닫기</button>
+        </div>
+    </div>
+
+    <script>
+        // 도움말 모달 제어
+        document.getElementById('help-btn').addEventListener('click', () => {
+            const modal = document.getElementById('help-modal');
+            modal.style.display = 'flex';
+        });
+        
+        document.getElementById('close-help').addEventListener('click', () => {
+            document.getElementById('help-modal').style.display = 'none';
+        });
+        
+        // 새 게임 버튼
+        document.getElementById('new-game-btn').addEventListener('click', () => {
+            if (window.tetrisGame && window.tetrisGame.scene.scenes[0]) {
+                window.tetrisGame.scene.scenes[0].newGame();
+            }
+        });
+        
+        // 게임 포기 버튼
+        document.getElementById('give-up-btn').addEventListener('click', () => {
+            if (window.tetrisGame && window.tetrisGame.scene.scenes[0]) {
+                const scene = window.tetrisGame.scene.scenes[0];
+                // 게임 오버 상태로 만들고 게임 오버 화면 표시
+                if (scene.gameState && !scene.gameState.isGameOver) {
+                    scene.gameState.isGameOver = true;
+                    scene.isRunning = false;
+                    scene.gameOver();
+                }
+            }
+        });
+
+        // 속도 조절 슬라이더
+        const speedSlider = document.getElementById('speed-slider');
+        const speedValue = document.getElementById('speed-value');
+        
+        // 저장된 속도 불러오기
+        const savedSpeed = parseInt(localStorage.getItem('tetrisFallSpeed') || '800');
+        speedSlider.value = savedSpeed;
+        updateSpeedDisplay(savedSpeed);
+        
+        // 속도 변경 이벤트
+        speedSlider.addEventListener('input', (e) => {
+            const speed = parseInt(e.target.value);
+            updateSpeedDisplay(speed);
+            localStorage.setItem('tetrisFallSpeed', speed.toString());
+            
+            // 게임 중이면 즉시 적용
+            if (window.tetrisGame && window.tetrisGame.scene.scenes[0]) {
+                const scene = window.tetrisGame.scene.scenes[0];
+                if (scene.gameState) {
+                    scene.gameState.fallSpeed = speed;
+                }
+            }
+        });
+        
+        function updateSpeedDisplay(speed) {
+            let label = '';
+            if (speed <= 500) {
+                label = '매우 빠름';
+            } else if (speed <= 700) {
+                label = '빠름';
+            } else if (speed <= 900) {
+                label = '보통';
+            } else if (speed <= 1100) {
+                label = '느림';
+            } else {
+                label = '매우 느림';
+            }
+            speedValue.textContent = label;
+        }
+    </script>
+    <script src="game.js"></script>
+</body>
+</html>
