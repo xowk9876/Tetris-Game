@@ -49,10 +49,14 @@
             height: 100%;
             z-index: -1;
             pointer-events: none;
+            /* 배경색 설정 (로딩 중에도 보이도록) */
+            background: linear-gradient(180deg, #0a0a1a 0%, #1a1a2e 50%, #0f0f23 100%);
             /* 하드웨어 가속 */
             -webkit-transform: translateZ(0);
             transform: translateZ(0);
             will-change: transform;
+            /* 디스플레이 보장 */
+            display: block;
         }
 
         @keyframes gradientShift {
@@ -581,19 +585,37 @@
         }
 
         // 테트리스 동적 배경 애니메이션
-        document.addEventListener('DOMContentLoaded', () => {
+        function initBackground() {
             const canvas = document.getElementById('tetris-background');
-            if (!canvas) return;
+            if (!canvas) {
+                // Canvas가 아직 로드되지 않았으면 재시도
+                setTimeout(initBackground, 100);
+                return;
+            }
             
             const ctx = canvas.getContext('2d');
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
+            if (!ctx) {
+                console.error('Canvas 2D context를 가져올 수 없습니다.');
+                return;
+            }
+            
+            // 캔버스 크기 설정
+            function resizeCanvas() {
+                const width = window.innerWidth || document.documentElement.clientWidth || 800;
+                const height = window.innerHeight || document.documentElement.clientHeight || 900;
+                canvas.width = width;
+                canvas.height = height;
+            }
+            resizeCanvas();
+            
+            // Canvas 크기가 0이면 기본값 설정
+            if (canvas.width === 0 || canvas.height === 0) {
+                canvas.width = 800;
+                canvas.height = 900;
+            }
             
             // 창 크기 변경 시 캔버스 크기 조정
-            window.addEventListener('resize', () => {
-                canvas.width = window.innerWidth;
-                canvas.height = window.innerHeight;
-            });
+            window.addEventListener('resize', resizeCanvas);
             
             // 테트리스 블록 색상
             const colors = [
@@ -724,7 +746,13 @@
             const grid = new Grid();
             
             // 애니메이션 루프
+            let animationId = null;
             function animate() {
+                // Canvas 크기 재확인
+                if (canvas.width === 0 || canvas.height === 0) {
+                    resizeCanvas();
+                }
+                
                 // 그라데이션 배경
                 const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
                 gradient.addColorStop(0, '#0a0a1a');
@@ -743,11 +771,37 @@
                     block.draw();
                 });
                 
-                requestAnimationFrame(animate);
+                animationId = requestAnimationFrame(animate);
             }
             
-            // 애니메이션 시작
-            animate();
+            // 애니메이션 시작 (즉시 실행)
+            if (canvas.width > 0 && canvas.height > 0) {
+                animate();
+            } else {
+                // Canvas 크기가 0이면 잠시 후 재시도
+                setTimeout(() => {
+                    resizeCanvas();
+                    if (canvas.width > 0 && canvas.height > 0) {
+                        animate();
+                    }
+                }, 100);
+            }
+        }
+        
+        // 페이지 로드 완료 후 배경 초기화
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initBackground);
+        } else {
+            // 이미 로드된 경우 즉시 실행
+            initBackground();
+        }
+        
+        // 추가 안전장치: window.onload
+        window.addEventListener('load', () => {
+            const canvas = document.getElementById('tetris-background');
+            if (canvas && !canvas.getContext('2d')) {
+                initBackground();
+            }
         });
     </script>
     <script src="game.js"></script>
