@@ -170,8 +170,6 @@ Tetris-Game-main/
 
 <div align="center">
 
-[![Instagram](https://img.shields.io/badge/Instagram-E4405F?style=for-the-badge&logo=instagram&logoColor=white)](https://www.instagram.com/tae_system/)
-
 <a href="https://www.instagram.com/tae_system/" target="_blank" rel="noopener noreferrer">
   <img src="https://upload.wikimedia.org/wikipedia/commons/a/a5/Instagram_icon.png" alt="Instagram" width="32" height="32" style="vertical-align: middle; margin-right: 8px;">
   <span style="font-size: 16px; font-weight: 600;">@tae_system</span>
