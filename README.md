@@ -10,9 +10,6 @@
   <img src="https://img.shields.io/badge/🎮_지금_체험해보기-00D4FF?style=for-the-badge&logo=vercel&logoColor=white&labelColor=000011" alt="Play Now" />
 </a>
 
-[![Vercel](https://img.shields.io/badge/Vercel-000000?style=flat-square&logo=vercel&logoColor=white)](https://vercel.com)
-[![Status](https://img.shields.io/badge/Status-Live-success?style=flat-square)](https://tetrisgame-fawn.vercel.app/)
-
 </div>
 
 ![React](https://img.shields.io/badge/React-18.2.0-blue)
