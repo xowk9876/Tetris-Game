@@ -2,6 +2,21 @@
 
 **React + Phaser 3 + 화려한 우주 테마**로 만든 모던한 테트리스 게임입니다.
 
+<div align="center">
+
+## 🚀 체험해보기
+
+<a href="https://tetrisgame-fawn.vercel.app/" target="_blank" rel="noopener noreferrer">
+  <img src="https://img.shields.io/badge/🎮_지금_체험해보기-00D4FF?style=for-the-badge&logo=vercel&logoColor=white&labelColor=000011" alt="Play Now" />
+</a>
+
+**✨ [https://tetrisgame-fawn.vercel.app/](https://tetrisgame-fawn.vercel.app/)**
+
+[![Vercel](https://img.shields.io/badge/Vercel-000000?style=flat-square&logo=vercel&logoColor=white)](https://vercel.com)
+[![Status](https://img.shields.io/badge/Status-Live-success?style=flat-square)](https://tetrisgame-fawn.vercel.app/)
+
+</div>
+
 ![React](https://img.shields.io/badge/React-18.2.0-blue)
 ![Phaser 3](https://img.shields.io/badge/Phaser-3.70.0-blueviolet)
 ![Vite](https://img.shields.io/badge/Vite-5.0.8-646CFF)
