@@ -13,10 +13,14 @@
 
 </div>
 
+<div align="center">
+
 ![React](https://img.shields.io/badge/React-18.2.0-blue)
 ![Phaser 3](https://img.shields.io/badge/Phaser-3.70.0-blueviolet)
 ![Vite](https://img.shields.io/badge/Vite-5.0.8-646CFF)
 ![Version](https://img.shields.io/badge/Version-1.1.0-green)
+
+</div>
 
 ## ✨ 주요 특징
 
