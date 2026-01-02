@@ -1,22 +1,49 @@
-# 🎮 테트리스 게임 (Tetris Game)
+# 🎮 테트리스 게임 (Tetris Game) - React 버전
 
-**Phaser 3** 프레임워크로 만든 모던한 테트리스 게임입니다.
+**React + Phaser 3 + 화려한 우주 테마**로 만든 모던한 테트리스 게임입니다.
 
+![React](https://img.shields.io/badge/React-18.2.0-blue)
 ![Phaser 3](https://img.shields.io/badge/Phaser-3.70.0-blueviolet)
-![HTML5](https://img.shields.io/badge/HTML5-E34F26?logo=html5&logoColor=white)
-![JavaScript](https://img.shields.io/badge/JavaScript-F7DF1E?logo=javascript&logoColor=black)
+![Vite](https://img.shields.io/badge/Vite-5.0.8-646CFF)
+![Version](https://img.shields.io/badge/Version-1.1.0-green)
 
 ## ✨ 주요 특징
 
-- ⚡ **WebGL 렌더링**: GPU 가속으로 부드러운 60 FPS 성능
-- 💎 **네온 사이버펑크 스타일**: 글래스모피즘 UI
-- 🎨 **동적 배경 애니메이션**: Canvas 기반 떨어지는 블록 파티클 효과
+- ⚡ **React + Vite**: 빠른 개발 환경과 빌드
+- 🌌 **화려한 우주 배경**: Canvas 기반 동적 파티클 시스템 (500개 별, 50개 빛나는 별, 8개 유성, 6개 성운, 3개 은하수, 40개 블록 파티클)
+- 🎨 **3D 배경 디자인**: CSS 3D Transform을 활용한 입체적인 배경 애니메이션
+- 💎 **3D 블록 렌더링**: 그라디언트와 하이라이트로 입체감 있는 블록
+- 🎆 **줄 제거 효과**: 줄 제거 시 영어 메시지 표시 (SINGLE, DOUBLE, TRIPLE, TETRIS!), 콤보 메시지
 - 👻 **고스트 블록**: 블록이 떨어질 위치 미리보기
 - 🎯 **홀드 시스템**: 블록을 보관하고 재사용 가능
 - 👀 **다음 블록 미리보기**: 전략적 플레이 지원
-- 🔢 **콤보 시스템**: 연속 줄 제거 시 누적 보너스
-- 🎵 **사운드 시스템**: 배경음악 및 효과음 (선택적)
+- 🔢 **콤보 시스템**: 연속 줄 제거 시 누적 보너스 및 화려한 메시지 표시
+- 🎵 **사운드 시스템**: 배경음악 및 효과음
 - ⚙️ **속도 조절**: 실시간 낙하 속도 조절 기능
+
+## 🚀 시작하기
+
+### 설치
+
+```bash
+npm install
+```
+
+### 개발 서버 실행
+
+```bash
+npm run dev
+```
+
+브라우저에서 `http://localhost:3000` (또는 터미널에 표시된 포트)로 접속하세요.
+
+### 프로덕션 빌드
+
+```bash
+npm run build
+```
+
+빌드된 파일은 `dist/` 폴더에 생성됩니다.
 
 ## 🎮 게임 조작
 
@@ -24,9 +51,9 @@
 |---|---|
 | **← →** | 블록 좌우 이동 |
 | **↑** | 블록 회전 |
-| **↓** | 소프트 드롭 |
-| **Space** | 하드 드롭 |
-| **C** | 홀드 |
+| **↓** | 소프트 드롭 (빠른 낙하) |
+| **Space** | 하드 드롭 (즉시 낙하) |
+| **C** | 홀드 (블록 보관) |
 | **P** | 일시정지/재개 |
 
 ## 🎯 점수 시스템
@@ -41,57 +68,117 @@
 - **콤보 보너스**: 연속 줄 제거 시 (콤보-1) × 50점
 - **백투백 테트리스**: 연속 테트리스 시 점수 × 1.5배
 
-## 🚀 시작하기
+## 📁 프로젝트 구조
 
-1. **로컬 서버 실행**
-   ```bash
-   python -m http.server 8000
-   # 또는
-   npx serve -p 8000
-   ```
+```
+Tetris-Game-main/
+├── src/
+│   ├── components/
+│   │   ├── Background.jsx      # 3D 배경 컴포넌트
+│   │   ├── Background.css      # 3D 배경 스타일
+│   │   ├── TetrisGame.jsx      # 메인 게임 컴포넌트
+│   │   └── TetrisGame.css
+│   ├── utils/
+│   │   ├── gameConfig.js       # 게임 설정
+│   │   └── gameClassesFull.js  # 게임 클래스 및 Phaser 씬
+│   ├── styles/
+│   │   ├── index.css           # 전역 스타일
+│   │   └── App.css             # 앱 스타일
+│   ├── App.jsx                  # 루트 컴포넌트
+│   └── main.jsx                 # 진입점
+├── public/
+│   └── sounds/                  # 사운드 파일
+├── index.html                    # HTML 템플릿
+├── package.json                  # 의존성
+├── vite.config.js                # Vite 설정
+└── README.md                     # 이 파일
+```
 
-2. **브라우저에서 열기**: `http://localhost:8000`
+## 🛠 기술 스택
+
+- **프레임워크**: React 18.2.0
+- **게임 엔진**: Phaser 3.70.0
+- **빌드 도구**: Vite 5.0.8
+- **배경 렌더링**: HTML5 Canvas (동적 파티클 시스템)
+- **배경 디자인**: CSS 3D Transform (Perspective, Rotate)
+- **게임 렌더링**: WebGL (GPU 가속)
+- **스타일링**: CSS3 (3D Transform, 그라디언트, 애니메이션)
+
+## 🌌 화려한 우주 테마 배경
+
+**Canvas 기반 동적 파티클 시스템**과 **CSS 3D Transform**을 결합한 역동적인 우주 배경을 구현했습니다.
+
+### Canvas 파티클 시스템
+- **500개의 반짝이는 별**: 부드러운 깜빡임 애니메이션 (눈의 피로 최소화)
+- **50개의 빛나는 별**: 컬러 글로우와 별자리 연결선 효과 (적당한 밝기)
+- **8개의 유성**: 긴 꼬리(최대 200px), 파티클 효과, 다중 색상 그라데이션
+- **6개의 성운**: 이중 색상 그라데이션, 외곽 글로우, 부드러운 펄스 애니메이션 (7가지 색상)
+- **3개의 은하수**: 회전 애니메이션과 그라데이션 효과
+- **40개의 테트리스 블록 파티클**: 3D 하이라이트, 회전 애니메이션
+- **150개의 연결 파티클**: 그라데이션 연결선, 별자리 네트워크 효과
+
+### CSS 3D 효과
+- **3D 그리드**: Perspective transform으로 깊이감 있는 이중 그리드 패턴
+- **부드러운 애니메이션**: 실시간으로 변화하는 3D 회전 및 펄스 효과 (느린 속도로 눈의 피로 최소화)
+- **다층 그라데이션**: 8개 이상의 레이어로 구성된 배경 (적당한 투명도)
+- **성능 최적화**: `requestAnimationFrame`으로 부드러운 60fps 렌더링
 
 ## 🔧 주요 기능
 
-- **동적 배경**: Canvas 기반 떨어지는 블록 파티클과 네온 그리드 패턴
+### 게임 기능
 - **속도 조절**: 우측 상단 슬라이더로 낙하 속도 조절 (400ms ~ 1200ms)
 - **HUD 표시**: 줄 수, 점수, 콤보 실시간 표시
 - **홀드/다음 블록**: 전략적 플레이 지원
 - **일시정지**: P 키로 게임 일시정지/재개
 - **SRS 회전 시스템**: 현대 테트리스 표준 회전 규칙 (벽 킥 지원)
 - **7-Bag 시스템**: 공정한 블록 분배 시스템
-
-## 📁 프로젝트 구조
-
-```
-Tetris-Game-main/
-├── game.js              # 게임 로직 및 Phaser 씬
-├── index.html           # 메인 HTML 파일 (인라인 스타일 포함)
-├── LICENSE              # MIT 라이선스
-├── README.md            # 프로젝트 문서
-└── sounds/              # 사운드 파일 (선택적)
-    ├── README.md        # 사운드 파일 설명
-    ├── bgm.mp3          # 배경음악
-    ├── drop.wav         # 블록 낙하 효과음
-    ├── game_over.wav    # 게임 오버 효과음
-    └── tetris.wav       # 테트리스 효과음
-```
-
-## 🛠 기술 스택
-
-- **게임 엔진**: Phaser 3.70.0
-- **렌더링**: WebGL (GPU 가속)
-- **배경 애니메이션**: HTML5 Canvas
-- **스타일링**: CSS3 (글래스모피즘, 그라데이션)
-- **언어**: JavaScript (ES6+)
+- **콤보 메시지**: 연속 줄 제거 시 화려한 콤보 메시지 표시
 
 ## 📄 라이선스
 
 [MIT License](LICENSE)
 
+## 📝 업데이트 내역
+
+### 2026년 최신 버전 (v1.1.0)
+- 🌌 **화려한 우주 배경 업데이트**: Canvas 기반 동적 파티클 시스템 대폭 강화
+  - 500개의 반짝이는 별 (300개 → 500개, 부드러운 깜빡임)
+  - 50개의 빛나는 별 추가 (컬러 글로우, 별자리 연결선, 적당한 밝기)
+  - 8개의 유성 (5개 → 8개, 긴 꼬리 최대 200px, 파티클 효과)
+  - 6개의 성운 (4개 → 6개, 이중 색상 그라데이션, 부드러운 펄스)
+  - 3개의 은하수 효과 추가 (회전 애니메이션)
+  - 40개의 테트리스 블록 파티클 (20개 → 40개, 3D 하이라이트)
+  - 150개의 연결 파티클 (100개 → 150개, 그라데이션 연결선)
+- ✨ **3D 배경 디자인 강화**: CSS 3D Transform 다층 효과
+  - 8개 이상의 그라데이션 레이어 (적당한 투명도)
+  - 이중 그리드 패턴
+  - 부드러운 회전 및 펄스 애니메이션 (느린 속도)
+- 🎨 **3D 블록 렌더링**: 그라디언트 및 하이라이트로 입체감 강화
+- 🎆 **줄 제거 효과 개선**: 영어 메시지 표시 (SINGLE, DOUBLE, TRIPLE, TETRIS!), 콤보 메시지
+- 👁️ **배경 깜빡임 조정**: 눈의 피로 최소화를 위한 깜빡임 속도 및 밝기 조정
+  - 별 깜빡임 속도 약 80% 감소
+  - 성운 펄스 속도 약 85% 감소
+  - CSS 애니메이션 속도 2-3배 감소
+  - 모든 글로우 효과 및 투명도 조정
+- ⚡ **성능 최적화**: 줄 제거 애니메이션 시간 단축 (50% 개선)
+- 🐛 **버그 수정**: 줄 제거 로직 개선, 중복 효과 방지, 플래그 리셋 타이밍 개선
+- 📝 **README 최신화**: 최신 기능 반영 및 문서 개선
+
 ---
 
-<a href="https://www.instagram.com/tae_system/" target="_blank">
-  <img src="https://raw.githubusercontent.com/rahuldkjain/github-profile-readme-generator/master/src/images/icons/Social/instagram.svg" alt="Instagram" width="32" height="32" style="vertical-align: middle;" /> @tae_system
+## 🔎 방문
+
+<div align="center">
+
+[![Instagram](https://img.shields.io/badge/Instagram-E4405F?style=for-the-badge&logo=instagram&logoColor=white)](https://www.instagram.com/tae_system/)
+
+<a href="https://www.instagram.com/tae_system/" target="_blank" rel="noopener noreferrer">
+  <img src="https://upload.wikimedia.org/wikipedia/commons/a/a5/Instagram_icon.png" alt="Instagram" width="32" height="32" style="vertical-align: middle; margin-right: 8px;">
+  <span style="font-size: 16px; font-weight: 600;">@tae_system</span>
 </a>
+
+</div>
+
+---
+
+**Copyright © 2026 Tae-System**
