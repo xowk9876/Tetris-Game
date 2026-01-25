@@ -7,11 +7,8 @@
   z-index: 0;
   pointer-events: none;
   overflow: hidden;
-  perspective: 2000px;
   --grid-offset-x: 0px;
   --grid-offset-y: 0px;
-  --rotation: 0deg;
-  --depth: 0px;
 }
 
 /* Canvas 파티클 레이어 */
@@ -25,7 +22,7 @@
   pointer-events: none;
 }
 
-/* 3D 베이스 배경 - 우주 느낌의 깊은 3D 효과 (더 화려하게!) */
+/* 정적 베이스 배경 (애니메이션 제거) */
 .background-3d-base {
   position: absolute;
   top: 0;
@@ -33,134 +30,42 @@
   width: 100%;
   height: 100%;
   background: 
-    radial-gradient(ellipse at 15% 25%, rgba(0, 245, 255, 0.2) 0%, transparent 75%), /* 0.35 -> 0.2 */
-    radial-gradient(ellipse at 85% 75%, rgba(255, 107, 157, 0.18) 0%, transparent 75%), /* 0.32 -> 0.18 */
-    radial-gradient(ellipse at 50% 50%, rgba(255, 215, 0, 0.16) 0%, transparent 85%), /* 0.3 -> 0.16 */
-    radial-gradient(ellipse at 5% 85%, rgba(65, 105, 225, 0.15) 0%, transparent 65%), /* 0.28 -> 0.15 */
-    radial-gradient(ellipse at 95% 15%, rgba(138, 43, 226, 0.14) 0%, transparent 65%), /* 0.25 -> 0.14 */
-    radial-gradient(ellipse at 25% 5%, rgba(76, 175, 80, 0.12) 0%, transparent 55%), /* 0.22 -> 0.12 */
-    radial-gradient(ellipse at 70% 40%, rgba(255, 20, 147, 0.11) 0%, transparent 60%), /* 0.2 -> 0.11 */
-    radial-gradient(ellipse at 40% 90%, rgba(0, 191, 255, 0.1) 0%, transparent 50%), /* 0.18 -> 0.1 */
-    linear-gradient(135deg, #000011 0%, #0a0a1a 20%, #1a1a2e 40%, #0f0f23 60%, #1a1a2e 80%, #0a0a1a 100%);
-  animation: basePulse 20s ease-in-out infinite; /* 10s -> 20s로 느리게 */
-  transform: translateZ(-300px) scale(1.1);
-  transform-style: preserve-3d;
+    radial-gradient(ellipse at 15% 25%, rgba(0, 245, 255, 0.12) 0%, transparent 60%),
+    radial-gradient(ellipse at 85% 75%, rgba(255, 107, 157, 0.1) 0%, transparent 60%),
+    radial-gradient(ellipse at 50% 50%, rgba(255, 215, 0, 0.08) 0%, transparent 70%),
+    linear-gradient(135deg, #000011 0%, #0a0a1a 30%, #0f0f23 70%, #000011 100%);
   z-index: 0;
 }
 
-@keyframes basePulse {
-  0%, 100% { 
-    opacity: 1;
-    transform: translateZ(-300px) scale(1.1) rotateY(0deg) rotateX(0deg);
-  }
-  25% {
-    opacity: 0.995; /* 0.99 -> 0.995로 더 줄임 */
-    transform: translateZ(-297px) scale(1.102) rotateY(0.3deg) rotateX(0.3deg); /* 변화 더 줄임 */
-  }
-  50% { 
-    opacity: 0.99; /* 0.98 -> 0.99로 더 줄임 */
-    transform: translateZ(-295px) scale(1.105) rotateY(0.5deg) rotateX(-0.3deg); /* 변화 더 줄임 */
-  }
-  75% {
-    opacity: 0.995; /* 0.99 -> 0.995로 더 줄임 */
-    transform: translateZ(-297px) scale(1.102) rotateY(-0.3deg) rotateX(0.3deg); /* 변화 더 줄임 */
-  }
-}
-
-/* 3D 그리드 효과 - 더 강력한 3D 변환 (더 화려하게!) */
+/* 간소화된 그리드 효과 */
 .background-3d-grid {
   position: absolute;
   top: 50%;
   left: 50%;
-  width: 200%;
-  height: 200%;
-  margin-left: -100%;
-  margin-top: -100%;
+  width: 150%;
+  height: 150%;
+  margin-left: -75%;
+  margin-top: -75%;
   background-image: 
-    linear-gradient(rgba(0, 245, 255, 0.18) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(0, 245, 255, 0.18) 1px, transparent 1px),
-    linear-gradient(rgba(255, 107, 157, 0.08) 1px, transparent 2px),
-    linear-gradient(90deg, rgba(255, 107, 157, 0.08) 1px, transparent 2px);
-  background-size: 60px 60px, 60px 60px, 120px 120px, 120px 120px;
+    linear-gradient(rgba(0, 245, 255, 0.08) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 245, 255, 0.08) 1px, transparent 1px);
+  background-size: 80px 80px;
   transform: 
-    perspective(2000px) 
-    rotateX(65deg) 
-    rotateY(var(--rotation))
-    translateZ(-150px)
+    perspective(1500px) 
+    rotateX(60deg) 
+    translateZ(-100px)
     translate(var(--grid-offset-x), var(--grid-offset-y));
   transform-origin: center center;
-  transform-style: preserve-3d;
-  opacity: 0.85;
-  animation: grid3dMove 30s linear infinite; /* 20s -> 30s로 느리게 */
-  will-change: transform;
+  opacity: 0.6;
   z-index: 2;
-  filter: blur(0.5px);
-  box-shadow: 
-    inset 0 0 100px rgba(0, 245, 255, 0.1),
-    inset 0 0 200px rgba(255, 107, 157, 0.05);
 }
 
-@keyframes grid3dMove {
-  0% {
-    background-position: 0 0;
-    transform: perspective(2000px) rotateX(65deg) rotateY(0deg) translateZ(-150px) translate(0, 0);
-  }
-  25% {
-    transform: perspective(2000px) rotateX(65deg) rotateY(5deg) translateZ(-150px) translate(10px, -10px);
-  }
-  50% {
-    background-position: 60px 60px;
-    transform: perspective(2000px) rotateX(65deg) rotateY(0deg) translateZ(-150px) translate(0, 0);
-  }
-  75% {
-    transform: perspective(2000px) rotateX(65deg) rotateY(-5deg) translateZ(-150px) translate(-10px, 10px);
-  }
-  100% {
-    background-position: 120px 120px;
-    transform: perspective(2000px) rotateX(65deg) rotateY(0deg) translateZ(-150px) translate(0, 0);
-  }
-}
-
-/* 3D 깊이 레이어 추가 (더 화려하게!) */
+/* ::before 의사 요소 제거 (성능 향상) */
 .background-3d-base::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: 
-    radial-gradient(circle at 35% 55%, rgba(0, 245, 255, 0.12) 0%, transparent 45%), /* 0.2 -> 0.12 */
-    radial-gradient(circle at 65% 45%, rgba(255, 107, 157, 0.11) 0%, transparent 45%), /* 0.18 -> 0.11 */
-    radial-gradient(circle at 20% 80%, rgba(138, 43, 226, 0.09) 0%, transparent 40%), /* 0.15 -> 0.09 */
-    radial-gradient(circle at 80% 20%, rgba(255, 215, 0, 0.08) 0%, transparent 40%); /* 0.12 -> 0.08 */
-  transform: translateZ(-400px);
-  transform-style: preserve-3d;
-  animation: depthLayer 25s ease-in-out infinite; /* 14s -> 25s로 느리게 */
-  z-index: 0;
-  filter: blur(20px);
+  display: none;
 }
 
-@keyframes depthLayer {
-  0%, 100% {
-    opacity: 0.75;
-    transform: translateZ(-400px) scale(1) rotateZ(0deg);
-  }
-  25% {
-    opacity: 0.77; /* 0.80 -> 0.77로 더 줄임 */
-    transform: translateZ(-397px) scale(1.008) rotateZ(0.3deg); /* 변화 더 줄임 */
-  }
-  50% {
-    opacity: 0.80; /* 0.85 -> 0.80로 더 줄임 */
-    transform: translateZ(-395px) scale(1.015) rotateZ(0deg);
-  }
-  75% {
-    opacity: 0.77; /* 0.80 -> 0.77로 더 줄임 */
-    transform: translateZ(-397px) scale(1.008) rotateZ(-0.3deg); /* 변화 더 줄임 */
-  }
-}
-
-/* 그라디언트 오버레이 - 우주 깊이감 추가 (더 화려하게!) */
+/* 정적 그라디언트 오버레이 (애니메이션 제거) */
 .background-gradient-overlay {
   position: absolute;
   top: 0;
@@ -168,24 +73,9 @@
   width: 100%;
   height: 100%;
   background: 
-    linear-gradient(180deg, rgba(0, 0, 17, 0.7) 0%, transparent 25%, transparent 75%, rgba(0, 0, 17, 0.7) 100%),
-    linear-gradient(90deg, rgba(0, 0, 17, 0.5) 0%, transparent 20%, transparent 80%, rgba(0, 0, 17, 0.5) 100%),
-    radial-gradient(ellipse at center, transparent 0%, rgba(0, 0, 17, 0.4) 100%),
-    radial-gradient(ellipse at 30% 20%, rgba(0, 245, 255, 0.05) 0%, transparent 50%),
-    radial-gradient(ellipse at 70% 80%, rgba(255, 107, 157, 0.05) 0%, transparent 50%);
+    linear-gradient(180deg, rgba(0, 0, 17, 0.5) 0%, transparent 20%, transparent 80%, rgba(0, 0, 17, 0.5) 100%),
+    radial-gradient(ellipse at center, transparent 0%, rgba(0, 0, 17, 0.3) 100%);
   pointer-events: none;
-  transform: translateZ(0px);
-  transform-style: preserve-3d;
   z-index: 3;
-  animation: overlayPulse 15s ease-in-out infinite; /* 8s -> 15s로 느리게 */
-}
-
-@keyframes overlayPulse {
-  0%, 100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.99; /* 0.98 -> 0.99로 더 줄임 */
-  }
 }
 

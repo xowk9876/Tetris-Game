@@ -209,6 +209,7 @@ export class GameState {
         
         this.isGameOver = false;
         this.isPaused = false;
+        this.isLocking = false; // 블록 고정 중 플래그 (라인 클리어 애니메이션 중)
         
         this.fallTimer = 0;
         // 저장된 속도 불러오기 (없으면 기본값)
@@ -241,6 +242,11 @@ export class GameState {
     }
     
     lockBlock() {
+        // 이미 고정 중이면 중복 호출 방지
+        if (this.isLocking) {
+            return;
+        }
+        
         this.board.placeBlock(this.currentBlock, this.currentBlock.x, this.currentBlock.y);
         
         // 블록 고정 사운드
@@ -251,23 +257,20 @@ export class GameState {
         // 줄 제거 체크 (제거될 줄 정보 가져오기)
         const clearResult = this.board.getLinesToClear();
         if (clearResult.count > 0) {
+            // 라인 클리어 중에는 게임 진행 멈춤
+            this.isLocking = true;
+            
             // 줄 제거 애니메이션 효과 표시 (콤보 정보도 전달)
-            // 현재 콤보는 아직 증가하지 않았으므로, 다음 콤보 값을 전달
             if (this.scene && this.scene.renderer) {
                 this.scene.renderer.showLineClearEffect(clearResult.rows, clearResult.count, this.combo + 1);
             }
             
-            // 애니메이션 후 실제 줄 제거
-            // 셀 사라지는 애니메이션이 완료될 때까지 충분한 시간 대기 (마지막 셀은 약 300ms 후)
-            const cellAnimationDelay = (CONFIG.BOARD_WIDTH - 1) * 12; // 마지막 셀의 delay
-            const cellAnimationDuration = 250; // 셀 애니메이션 지속 시간
-            const totalCellAnimationTime = cellAnimationDelay + cellAnimationDuration; // 약 358ms
-            
-            // 셀 애니메이션이 완료된 후 줄 제거 (더 빠르게 - 약 300ms)
+            // 셀 애니메이션이 완료된 후 줄 제거
             this.scene.time.delayedCall(300, () => {
-                // 제거 중인 줄 표시 해제 (플래그는 showLineClearEffect에서 해제)
+                // 제거 중인 줄 표시 해제
                 if (this.scene && this.scene.renderer) {
                     this.scene.renderer.clearingLines = [];
+                    this.scene.renderer.markBoardDirty();
                 }
                 
                 // 실제 줄 제거
@@ -277,7 +280,15 @@ export class GameState {
                 } else {
                     this.combo = 0;
                 }
+                
+                // 보드 다시 그리기 강제
+                if (this.scene && this.scene.renderer) {
+                    this.scene.renderer.markBoardDirty();
+                }
+                
+                // 다음 블록 생성 후 잠금 해제
                 this.spawnNextBlock();
+                this.isLocking = false;
             });
         } else {
             this.combo = 0;
@@ -405,21 +416,12 @@ export class GameState {
             dropDistance++;
         }
         
-        // 하드 드롭 점수 제거 (줄 제거 시에만 점수 획득)
-        // if (dropDistance > 0) {
-        //     this.score += Math.min(dropDistance, 10) * 1;
-        // }
-        
         this.lockBlock();
         return dropDistance;
     }
     
-    softDrop(addScore = false) {
+    softDrop() {
         if (this.moveBlock(0, 1)) {
-            // 소프트 드롭 점수 제거 (줄 제거 시에만 점수 획득)
-            // if (addScore) {
-            //     this.score += 1;
-            // }
             return true;
         } else {
             this.lockBlock();
@@ -427,10 +429,9 @@ export class GameState {
         }
     }
     
-    // 자동 낙하 (점수 없음)
     autoDrop() {
         if (this.moveBlock(0, 1)) {
-                        return true;
+            return true;
         } else {
             this.lockBlock();
             return false;
@@ -438,7 +439,8 @@ export class GameState {
     }
     
     update(delta, isSoftDropping = false) {
-        if (this.isGameOver || this.isPaused || !this.currentBlock) return;
+        // 게임 오버, 일시정지, 블록 없음, 라인 클리어 중이면 업데이트 중지
+        if (this.isGameOver || this.isPaused || !this.currentBlock || this.isLocking) return;
         
         // 소프트 드롭 중일 때는 자동 낙하 타이머를 리셋하지 않음 (더 빠른 낙하)
         if (!isSoftDropping) {
@@ -454,7 +456,7 @@ export class GameState {
     }
 }
 
-// 렌더러 클래스
+// 렌더러 클래스 (최적화됨)
 export class TetrisRenderer {
     constructor(scene, gameState) {
         this.scene = scene;
@@ -464,103 +466,133 @@ export class TetrisRenderer {
         this.currentBlockGraphics = null;
         this.nextBlockGraphics = null;
         this.holdBlockGraphics = null;
-        this.clearingLines = []; // 제거 중인 줄 인덱스 리스트
-        this.isClearingLines = false; // 줄 제거 효과 진행 중 플래그
+        this.clearingLines = [];
+        this.isClearingLines = false;
+        
+        // 최적화: 더티 플래그 패턴
+        this.boardDirty = true;
+        this.lastBoardState = null;
+        this.lastCurrentBlock = null;
+        this.lastNextBlock = null;
+        this.lastHoldBlock = null;
+        
+        // 정적 요소는 한 번만 그리기
+        this.boardBackgroundDrawn = false;
+        this.boardBackground = null;
+        this.gridLines = null;
+    }
+    
+    // 보드 상태 변경 감지
+    isBoardChanged() {
+        const currentState = JSON.stringify(this.gameState.board.grid);
+        if (this.lastBoardState !== currentState) {
+            this.lastBoardState = currentState;
+            return true;
+        }
+        return false;
+    }
+    
+    // 현재 블록 변경 감지
+    isCurrentBlockChanged() {
+        const block = this.gameState.currentBlock;
+        if (!block) return this.lastCurrentBlock !== null;
+        
+        const currentState = `${block.type}-${block.x}-${block.y}-${block.rotation}`;
+        if (this.lastCurrentBlock !== currentState) {
+            this.lastCurrentBlock = currentState;
+            return true;
+        }
+        return false;
     }
     
     drawBoard() {
-        // 기존 그래픽 제거
-        this.cellGraphics.forEach(g => g.destroy());
-        this.cellGraphics = [];
-        
         const board = this.gameState.board;
         const startX = CONFIG.BOARD_OFFSET_X;
         const startY = CONFIG.BOARD_OFFSET_Y;
-        
-        // 보드 배경 (고급 디자인)
-        const bg = this.scene.add.graphics();
         const boardWidth = CONFIG.BOARD_WIDTH * CONFIG.CELL_SIZE;
         const boardHeight = CONFIG.BOARD_HEIGHT * CONFIG.CELL_SIZE;
         const padding = 8;
         
-        // 외부 그림자
-        bg.fillStyle(0x000000, 0.5);
-        bg.fillRoundedRect(
-            startX - padding + 2,
-            startY - padding + 2,
-            boardWidth + padding * 2,
-            boardHeight + padding * 2,
-            12
-        );
-        
-        // 메인 배경
-        bg.fillGradientStyle(0x0f0f23, 0x1a1a2e, 0x1a1a2e, 0x0f0f23, 1);
-        bg.fillRoundedRect(
-            startX - padding,
-            startY - padding,
-            boardWidth + padding * 2,
-            boardHeight + padding * 2,
-            12
-        );
-        
-        // 네온 테두리 (글로우 효과)
-        bg.lineStyle(3, 0x00f5ff, 0.8);
-        bg.strokeRoundedRect(
-            startX - padding,
-            startY - padding,
-            boardWidth + padding * 2,
-            boardHeight + padding * 2,
-            12
-        );
-        
-        // 내부 테두리
-        bg.lineStyle(1, 0x00f5ff, 0.3);
-        bg.strokeRoundedRect(
-            startX - padding + 2,
-            startY - padding + 2,
-            boardWidth + padding * 2 - 4,
-            boardHeight + padding * 2 - 4,
-            10
-        );
-        
-        this.cellGraphics.push(bg);
-        
-        // 그리드 라인 (더 미묘하게)
-        const grid = this.scene.add.graphics();
-        grid.lineStyle(1, 0x312e81, 0.15);
-        
-        // 세로선
-        for (let col = 0; col <= CONFIG.BOARD_WIDTH; col++) {
-            const x = startX + col * CONFIG.CELL_SIZE;
-            grid.moveTo(x, startY);
-            grid.lineTo(x, startY + CONFIG.BOARD_HEIGHT * CONFIG.CELL_SIZE);
-        }
-        
-        // 가로선
-        for (let row = 0; row <= CONFIG.BOARD_HEIGHT; row++) {
-            const y = startY + row * CONFIG.CELL_SIZE;
-            grid.moveTo(startX, y);
-            grid.lineTo(startX + CONFIG.BOARD_WIDTH * CONFIG.CELL_SIZE, y);
-        }
-        
-        grid.strokePath();
-        this.cellGraphics.push(grid);
-        
-        // 배치된 블록 그리기 (고품질)
-        for (let row = 0; row < board.height; row++) {
-            // 제거 중인 줄은 그리지 않음
-            if (this.clearingLines.includes(row)) {
-                continue;
+        // 정적 요소는 한 번만 그리기 (최적화)
+        if (!this.boardBackgroundDrawn) {
+            // 보드 배경
+            this.boardBackground = this.scene.add.graphics();
+            
+            // 외부 그림자
+            this.boardBackground.fillStyle(0x000000, 0.5);
+            this.boardBackground.fillRoundedRect(
+                startX - padding + 2,
+                startY - padding + 2,
+                boardWidth + padding * 2,
+                boardHeight + padding * 2,
+                12
+            );
+            
+            // 메인 배경
+            this.boardBackground.fillStyle(0x0f0f23, 1);
+            this.boardBackground.fillRoundedRect(
+                startX - padding,
+                startY - padding,
+                boardWidth + padding * 2,
+                boardHeight + padding * 2,
+                12
+            );
+            
+            // 네온 테두리
+            this.boardBackground.lineStyle(2, 0x00f5ff, 0.6);
+            this.boardBackground.strokeRoundedRect(
+                startX - padding,
+                startY - padding,
+                boardWidth + padding * 2,
+                boardHeight + padding * 2,
+                12
+            );
+            
+            // 그리드 라인
+            this.gridLines = this.scene.add.graphics();
+            this.gridLines.lineStyle(1, 0x312e81, 0.1);
+            
+            for (let col = 0; col <= CONFIG.BOARD_WIDTH; col++) {
+                const x = startX + col * CONFIG.CELL_SIZE;
+                this.gridLines.moveTo(x, startY);
+                this.gridLines.lineTo(x, startY + boardHeight);
             }
+            
+            for (let row = 0; row <= CONFIG.BOARD_HEIGHT; row++) {
+                const y = startY + row * CONFIG.CELL_SIZE;
+                this.gridLines.moveTo(startX, y);
+                this.gridLines.lineTo(startX + boardWidth, y);
+            }
+            
+            this.gridLines.strokePath();
+            this.boardBackgroundDrawn = true;
+        }
+        
+        // clearingLines가 있으면 항상 다시 그리기 (라인 클리어 중)
+        const hasClearingLines = this.clearingLines.length > 0;
+        
+        // 보드 상태가 변경되었을 때만 셀 다시 그리기
+        if (!this.isBoardChanged() && !this.boardDirty && !hasClearingLines) {
+            return;
+        }
+        this.boardDirty = false;
+        
+        // 기존 셀 그래픽 제거
+        this.cellGraphics.forEach(g => g.destroy());
+        this.cellGraphics = [];
+        
+        // 배치된 블록 그리기 (간소화된 스타일)
+        for (let row = 0; row < board.height; row++) {
+            // clearingLines에 포함된 줄은 그리지 않음
+            if (this.clearingLines.includes(row)) continue;
             
             for (let col = 0; col < board.width; col++) {
                 if (board.grid[row][col] !== 0) {
                     const cell = this.scene.add.graphics();
-                const x = startX + col * CONFIG.CELL_SIZE;
-                const y = startY + row * CONFIG.CELL_SIZE;
+                    const x = startX + col * CONFIG.CELL_SIZE;
+                    const y = startY + row * CONFIG.CELL_SIZE;
                     const cellSize = CONFIG.CELL_SIZE - 2;
                     
-                    // 색상 찾기 (숫자에서 색상 객체로 변환)
                     const colorValue = board.grid[row][col];
                     let colorObj = null;
                     for (const [type, colors] of Object.entries(TETROMINO_COLORS)) {
@@ -571,43 +603,19 @@ export class TetrisRenderer {
                     }
                     if (!colorObj) colorObj = { light: colorValue, base: colorValue, dark: colorValue };
                     
-                    // 그림자 효과 (3D 느낌)
-                    cell.fillStyle(0x000000, 0.5);
-                    cell.fillRoundedRect(x + 4, y + 4, cellSize, cellSize, 4);
+                    // 간소화된 블록 스타일
+                    cell.fillStyle(colorObj.base, 1);
+                    cell.fillRoundedRect(x + 1, y + 1, cellSize, cellSize, 3);
                     
-                    // 메인 블록 (3D 그라디언트)
-                    cell.fillGradientStyle(
-                        colorObj.light, colorObj.base,
-                        colorObj.dark, colorObj.base,
-                        1
-                    );
-                    cell.fillRoundedRect(x + 1, y + 1, cellSize, cellSize, 4);
+                    // 상단 하이라이트
+                    cell.fillStyle(colorObj.light, 0.5);
+                    cell.fillRect(x + 1, y + 1, cellSize, cellSize / 3);
                     
-                    // 상단 하이라이트 (밝은 부분)
-                    cell.fillGradientStyle(
-                        colorObj.light, colorObj.light,
-                        colorObj.base, colorObj.base,
-                        0.8
-                    );
-                    cell.fillRect(x + 1, y + 1, cellSize, cellSize / 2.5);
+                    // 테두리
+                    cell.lineStyle(1, 0xffffff, 0.4);
+                    cell.strokeRoundedRect(x + 1, y + 1, cellSize, cellSize, 3);
                     
-                    // 하단 그림자 (어두운 부분)
-                    cell.fillGradientStyle(
-                        colorObj.base, colorObj.base,
-                        colorObj.dark, colorObj.dark,
-                        0.6
-                    );
-                    cell.fillRect(x + 1, y + cellSize * 0.6, cellSize, cellSize / 2.5);
-                    
-                    // 테두리 (글로우 효과)
-                    cell.lineStyle(2, 0xffffff, 0.7);
-                    cell.strokeRoundedRect(x + 1, y + 1, cellSize, cellSize, 4);
-                    
-                    // 내부 하이라이트 라인
-                    cell.lineStyle(1, colorObj.light, 0.5);
-                    cell.strokeRoundedRect(x + 2, y + 2, cellSize - 2, cellSize / 3, 2);
-                
-                this.cellGraphics.push(cell);
+                    this.cellGraphics.push(cell);
                 }
             }
         }
@@ -616,6 +624,7 @@ export class TetrisRenderer {
     drawGhostBlock() {
         if (this.ghostGraphics) {
             this.ghostGraphics.destroy();
+            this.ghostGraphics = null;
         }
         
         if (!this.gameState.currentBlock) return;
@@ -638,13 +647,9 @@ export class TetrisRenderer {
                     const y = startY + (ghostY + row) * CONFIG.CELL_SIZE;
                     const cellSize = CONFIG.CELL_SIZE - 2;
                     
-                    // 고스트 블록 (더 명확하게)
-                    this.ghostGraphics.lineStyle(2, block.color, 0.4);
-                    this.ghostGraphics.strokeRoundedRect(x + 1, y + 1, cellSize, cellSize, 4);
-                    
-                    // 내부 점선 효과
-                    this.ghostGraphics.lineStyle(1, block.color, 0.2);
-                    this.ghostGraphics.strokeRoundedRect(x + 2, y + 2, cellSize - 2, cellSize - 2, 3);
+                    // 간소화된 고스트 블록
+                    this.ghostGraphics.lineStyle(1, block.color, 0.3);
+                    this.ghostGraphics.strokeRoundedRect(x + 1, y + 1, cellSize, cellSize, 2);
                 }
             }
         }
@@ -652,6 +657,11 @@ export class TetrisRenderer {
     
     drawCurrentBlock() {
         if (!this.gameState.currentBlock) return;
+        
+        // 변경되지 않았으면 스킵
+        if (!this.isCurrentBlockChanged() && this.currentBlockGraphics && this.currentBlockGraphics.length > 0) {
+            return;
+        }
         
         const block = this.gameState.currentBlock;
         const shape = block.getShape();
@@ -664,6 +674,8 @@ export class TetrisRenderer {
         }
         this.currentBlockGraphics = [];
         
+        const colorObj = block.colorObj || { light: block.color, base: block.color, dark: block.color };
+        
         for (let row = 0; row < shape.length; row++) {
             for (let col = 0; col < shape[row].length; col++) {
                 if (shape[row][col] === 1) {
@@ -672,46 +684,17 @@ export class TetrisRenderer {
                     const y = startY + (block.y + row) * CONFIG.CELL_SIZE;
                     const cellSize = CONFIG.CELL_SIZE - 2;
                     
-                    // 그림자 효과 (3D 느낌)
-                    cell.fillStyle(0x000000, 0.5);
-                    cell.fillRoundedRect(x + 3, y + 3, cellSize, cellSize, 4);
+                    // 간소화된 블록 스타일
+                    cell.fillStyle(colorObj.base, 1);
+                    cell.fillRoundedRect(x + 1, y + 1, cellSize, cellSize, 3);
                     
-                    // 메인 블록 (3D 그라디언트)
-                    const colorObj = block.colorObj || { light: block.color, base: block.color, dark: block.color };
-                    cell.fillGradientStyle(
-                        colorObj.light, colorObj.base,
-                        colorObj.dark, colorObj.base,
-                        1
-                    );
-                    cell.fillRoundedRect(x + 1, y + 1, cellSize, cellSize, 4);
+                    // 상단 하이라이트
+                    cell.fillStyle(colorObj.light, 0.6);
+                    cell.fillRect(x + 1, y + 1, cellSize, cellSize / 3);
                     
-                    // 상단 하이라이트 (밝은 부분)
-                    cell.fillGradientStyle(
-                        colorObj.light, colorObj.light,
-                        colorObj.base, colorObj.base,
-                        0.9
-                    );
-                    cell.fillRect(x + 1, y + 1, cellSize, cellSize / 2.5);
-                    
-                    // 하단 그림자 (어두운 부분)
-                    cell.fillGradientStyle(
-                        colorObj.base, colorObj.base,
-                        colorObj.dark, colorObj.dark,
-                        0.7
-                    );
-                    cell.fillRect(x + 1, y + cellSize * 0.6, cellSize, cellSize / 2.5);
-                    
-                    // 글로우 테두리
-                    cell.lineStyle(3, 0xffffff, 0.9);
-                    cell.strokeRoundedRect(x + 1, y + 1, cellSize, cellSize, 4);
-                    
-                    // 내부 하이라이트 라인
-                    cell.lineStyle(1, colorObj.light, 0.6);
-                    cell.strokeRoundedRect(x + 2, y + 2, cellSize - 2, cellSize / 3, 2);
-                    
-                    // 내부 테두리
-                    cell.lineStyle(1, 0xffffff, 0.3);
-                    cell.strokeRoundedRect(x + 2, y + 2, cellSize - 2, cellSize - 2, 3);
+                    // 테두리
+                    cell.lineStyle(2, 0xffffff, 0.6);
+                    cell.strokeRoundedRect(x + 1, y + 1, cellSize, cellSize, 3);
                     
                     this.currentBlockGraphics.push(cell);
                 }
@@ -720,6 +703,13 @@ export class TetrisRenderer {
     }
     
     drawNextBlock() {
+        // 변경 감지
+        const nextBlockType = this.gameState.nextBlock ? this.gameState.nextBlock.type : null;
+        if (this.lastNextBlock === nextBlockType && this.nextBlockGraphics && this.nextBlockGraphics.length > 0) {
+            return;
+        }
+        this.lastNextBlock = nextBlockType;
+        
         if (this.nextBlockGraphics) {
             this.nextBlockGraphics.forEach(g => g.destroy());
         }
@@ -731,33 +721,30 @@ export class TetrisRenderer {
         const shape = block.getShape();
         const startX = CONFIG.BOARD_OFFSET_X + CONFIG.BOARD_WIDTH * CONFIG.CELL_SIZE + 50;
         const startY = 150;
-        const cellSize = 24;
+        const cellSize = 22;
         
-        const panelWidth = 110;
-        const panelHeight = 110;
+        const panelWidth = 100;
+        const panelHeight = 100;
         const panelStartX = startX - 10;
         const panelStartY = startY - 10;
         const panelCenterX = panelStartX + panelWidth / 2;
-        const panelCenterY = panelStartY + panelHeight / 2;
         
-        // 배경 (고급 디자인)
+        // 배경 (간소화)
         const bg = this.scene.add.graphics();
-        bg.fillGradientStyle(0x0f0f23, 0x1a1a2e, 0x1a1a2e, 0x0f0f23, 0.9);
-        bg.fillRoundedRect(panelStartX, panelStartY, panelWidth, panelHeight, 12);
-        bg.lineStyle(2, 0x00f5ff, 0.7);
-        bg.strokeRoundedRect(panelStartX, panelStartY, panelWidth, panelHeight, 12);
+        bg.fillStyle(0x0f0f23, 0.9);
+        bg.fillRoundedRect(panelStartX, panelStartY, panelWidth, panelHeight, 8);
+        bg.lineStyle(1, 0x00f5ff, 0.5);
+        bg.strokeRoundedRect(panelStartX, panelStartY, panelWidth, panelHeight, 8);
         this.nextBlockGraphics.push(bg);
         
-        // "다음" 텍스트 (중앙 정렬)
-        const text = this.scene.add.text(panelCenterX, panelStartY + 18, '다음', {
-            fontSize: '16px',
+        const text = this.scene.add.text(panelCenterX, panelStartY + 16, '다음', {
+            fontSize: '14px',
             color: '#00f5ff',
-            fontFamily: 'Arial',
-            fontStyle: 'bold'
+            fontFamily: 'Arial'
         }).setOrigin(0.5);
         this.nextBlockGraphics.push(text);
         
-        // 실제 블록 바운딩 박스 계산
+        // 블록 바운딩 박스 계산
         let minCol = shape[0].length, maxCol = -1;
         let minRow = shape.length, maxRow = -1;
         
@@ -772,18 +759,14 @@ export class TetrisRenderer {
             }
         }
         
-        // 실제 블록 크기
         const actualBlockWidth = (maxCol - minCol + 1) * cellSize;
         const actualBlockHeight = (maxRow - minRow + 1) * cellSize;
+        const blockAreaCenterY = panelStartY + 32 + (panelHeight - 40) / 2;
         
-        // 블록 중심점 계산 (텍스트 아래 공간의 중앙)
-        const blockAreaStartY = panelStartY + 35; // 텍스트 아래 시작
-        const blockAreaHeight = panelHeight - 45; // 텍스트와 여백 제외
-        const blockAreaCenterY = blockAreaStartY + blockAreaHeight / 2;
-        
-        // 블록 그리기 (완전 중앙 정렬)
         const offsetX = panelCenterX - actualBlockWidth / 2 - minCol * cellSize;
         const offsetY = blockAreaCenterY - actualBlockHeight / 2 - minRow * cellSize;
+        
+        const colorObj = block.colorObj || { light: block.color, base: block.color, dark: block.color };
         
         for (let row = 0; row < shape.length; row++) {
             for (let col = 0; col < shape[row].length; col++) {
@@ -793,32 +776,10 @@ export class TetrisRenderer {
                     const y = offsetY + row * cellSize;
                     const size = cellSize - 2;
                     
-                    // 3D 효과를 위한 색상 객체
-                    const colorObj = block.colorObj || { light: block.color, base: block.color, dark: block.color };
-                    
-                    // 그림자 (3D 느낌)
-                    cell.fillStyle(0x000000, 0.4);
-                    cell.fillRoundedRect(x + 2, y + 2, size, size, 3);
-                    
-                    // 메인 블록 (3D 그라디언트)
-                    cell.fillGradientStyle(
-                        colorObj.light, colorObj.base,
-                        colorObj.dark, colorObj.base,
-                        1
-                    );
-                    cell.fillRoundedRect(x, y, size, size, 3);
-                    
-                    // 상단 하이라이트
-                    cell.fillGradientStyle(
-                        colorObj.light, colorObj.light,
-                        colorObj.base, colorObj.base,
-                        0.7
-                    );
-                    cell.fillRect(x, y, size, size / 2.5);
-                    
-                    // 테두리
-                    cell.lineStyle(2, 0xffffff, 0.7);
-                    cell.strokeRoundedRect(x, y, size, size, 3);
+                    cell.fillStyle(colorObj.base, 1);
+                    cell.fillRoundedRect(x, y, size, size, 2);
+                    cell.lineStyle(1, 0xffffff, 0.5);
+                    cell.strokeRoundedRect(x, y, size, size, 2);
                     
                     this.nextBlockGraphics.push(cell);
                 }
@@ -827,6 +788,13 @@ export class TetrisRenderer {
     }
     
     drawHoldBlock() {
+        // 변경 감지
+        const holdBlockType = this.gameState.holdBlock ? this.gameState.holdBlock.type : null;
+        if (this.lastHoldBlock === holdBlockType && this.holdBlockGraphics && this.holdBlockGraphics.length > 0) {
+            return;
+        }
+        this.lastHoldBlock = holdBlockType;
+        
         if (this.holdBlockGraphics) {
             this.holdBlockGraphics.forEach(g => g.destroy());
         }
@@ -836,35 +804,32 @@ export class TetrisRenderer {
         
         const block = this.gameState.holdBlock;
         const shape = block.getShape();
-        const startX = CONFIG.BOARD_OFFSET_X - 150;
+        const startX = CONFIG.BOARD_OFFSET_X - 140;
         const startY = 150;
-        const cellSize = 24;
+        const cellSize = 22;
         
-        const panelWidth = 110;
-        const panelHeight = 110;
+        const panelWidth = 100;
+        const panelHeight = 100;
         const panelStartX = startX - 10;
         const panelStartY = startY - 10;
         const panelCenterX = panelStartX + panelWidth / 2;
-        const panelCenterY = panelStartY + panelHeight / 2;
         
-        // 배경 (고급 디자인)
+        // 배경 (간소화)
         const bg = this.scene.add.graphics();
-        bg.fillGradientStyle(0x0f0f23, 0x1a1a2e, 0x1a1a2e, 0x0f0f23, 0.9);
-        bg.fillRoundedRect(panelStartX, panelStartY, panelWidth, panelHeight, 12);
-        bg.lineStyle(2, 0x00f5ff, 0.7);
-        bg.strokeRoundedRect(panelStartX, panelStartY, panelWidth, panelHeight, 12);
+        bg.fillStyle(0x0f0f23, 0.9);
+        bg.fillRoundedRect(panelStartX, panelStartY, panelWidth, panelHeight, 8);
+        bg.lineStyle(1, 0x00f5ff, 0.5);
+        bg.strokeRoundedRect(panelStartX, panelStartY, panelWidth, panelHeight, 8);
         this.holdBlockGraphics.push(bg);
         
-        // "홀드" 텍스트 (중앙 정렬)
-        const text = this.scene.add.text(panelCenterX, panelStartY + 18, '홀드', {
-            fontSize: '16px',
+        const text = this.scene.add.text(panelCenterX, panelStartY + 16, '홀드', {
+            fontSize: '14px',
             color: '#00f5ff',
-            fontFamily: 'Arial',
-            fontStyle: 'bold'
+            fontFamily: 'Arial'
         }).setOrigin(0.5);
         this.holdBlockGraphics.push(text);
         
-        // 실제 블록 바운딩 박스 계산
+        // 블록 바운딩 박스 계산
         let minCol = shape[0].length, maxCol = -1;
         let minRow = shape.length, maxRow = -1;
         
@@ -879,18 +844,14 @@ export class TetrisRenderer {
             }
         }
         
-        // 실제 블록 크기
         const actualBlockWidth = (maxCol - minCol + 1) * cellSize;
         const actualBlockHeight = (maxRow - minRow + 1) * cellSize;
+        const blockAreaCenterY = panelStartY + 32 + (panelHeight - 40) / 2;
         
-        // 블록 중심점 계산 (텍스트 아래 공간의 중앙)
-        const blockAreaStartY = panelStartY + 35; // 텍스트 아래 시작
-        const blockAreaHeight = panelHeight - 45; // 텍스트와 여백 제외
-        const blockAreaCenterY = blockAreaStartY + blockAreaHeight / 2;
-        
-        // 블록 그리기 (완전 중앙 정렬)
         const offsetX = panelCenterX - actualBlockWidth / 2 - minCol * cellSize;
         const offsetY = blockAreaCenterY - actualBlockHeight / 2 - minRow * cellSize;
+        
+        const colorObj = block.colorObj || { light: block.color, base: block.color, dark: block.color };
         
         for (let row = 0; row < shape.length; row++) {
             for (let col = 0; col < shape[row].length; col++) {
@@ -900,32 +861,10 @@ export class TetrisRenderer {
                     const y = offsetY + row * cellSize;
                     const size = cellSize - 2;
                     
-                    // 3D 효과를 위한 색상 객체
-                    const colorObj = block.colorObj || { light: block.color, base: block.color, dark: block.color };
-                    
-                    // 그림자 (3D 느낌)
-                    cell.fillStyle(0x000000, 0.4);
-                    cell.fillRoundedRect(x + 2, y + 2, size, size, 3);
-                    
-                    // 메인 블록 (3D 그라디언트)
-                    cell.fillGradientStyle(
-                        colorObj.light, colorObj.base,
-                        colorObj.dark, colorObj.base,
-                        1
-                    );
-                    cell.fillRoundedRect(x, y, size, size, 3);
-                    
-                    // 상단 하이라이트
-                    cell.fillGradientStyle(
-                        colorObj.light, colorObj.light,
-                        colorObj.base, colorObj.base,
-                        0.7
-                    );
-                    cell.fillRect(x, y, size, size / 2.5);
-                    
-                    // 테두리
-                    cell.lineStyle(2, 0xffffff, 0.7);
-                    cell.strokeRoundedRect(x, y, size, size, 3);
+                    cell.fillStyle(colorObj.base, 1);
+                    cell.fillRoundedRect(x, y, size, size, 2);
+                    cell.lineStyle(1, 0xffffff, 0.5);
+                    cell.strokeRoundedRect(x, y, size, size, 2);
                     
                     this.holdBlockGraphics.push(cell);
                 }
@@ -943,298 +882,131 @@ export class TetrisRenderer {
         const startX = CONFIG.BOARD_OFFSET_X;
         const startY = CONFIG.BOARD_OFFSET_Y;
         const boardWidth = CONFIG.BOARD_WIDTH * CONFIG.CELL_SIZE;
-        const board = this.gameState.board;
         
-        // 제거 중인 줄로 표시 (다음 렌더링에서 그리지 않음)
+        // 제거 중인 줄로 표시하고 보드 강제 재렌더링
         this.clearingLines = [...rows];
+        this.boardDirty = true;
         
-        // 한 줄만 제거할 때도 화려하게!
-        const impactIntensity = count === 1 ? 1.5 : count;
-        
-        // 모든 줄의 중앙 Y 좌표 계산 (전체 효과를 위한)
-        // 텍스트는 화면 중앙에 표시하여 확실히 보이도록
-        const centerY = this.scene.cameras.main.centerY; // 화면 중앙에 표시
+        const centerY = this.scene.cameras.main.centerY;
         const lineCenterY = rows.length > 0 
             ? startY + (rows[0] + rows[rows.length - 1]) / 2 * CONFIG.CELL_SIZE + CONFIG.CELL_SIZE / 2
             : startY + CONFIG.BOARD_HEIGHT * CONFIG.CELL_SIZE / 2;
         
-        // 각 줄에 대한 효과 (한 번만 실행)
-        rows.forEach((row, index) => {
+        // 간소화된 줄 효과 (각 줄에 하나의 글로우만)
+        rows.forEach((row) => {
             const y = startY + row * CONFIG.CELL_SIZE;
             
-            // 1. 줄 전체에 간단한 글로우 효과 (간소화)
             const glow = this.scene.add.graphics();
-            glow.lineStyle(3, 0x00f5ff, 0.6); // 두께와 투명도 줄임
-            glow.strokeRect(startX - 2, y - 2, boardWidth + 4, CONFIG.CELL_SIZE + 4);
+            glow.lineStyle(2, 0x00f5ff, 0.8);
+            glow.strokeRect(startX, y, boardWidth, CONFIG.CELL_SIZE);
             glow.setDepth(997);
             
-            // 글로우 펄스 애니메이션 (간소화)
             this.scene.tweens.add({
                 targets: glow,
-                alpha: { from: 0.6, to: 0 },
-                duration: 250, // 시간 단축
+                alpha: { from: 0.8, to: 0 },
+                duration: 200,
                 ease: 'Power2',
                 onComplete: () => glow.destroy()
             });
-            
-            // 2. 줄의 각 셀을 개별적으로 사라지게 하는 효과 (왼쪽에서 오른쪽으로 스캔)
-            for (let col = 0; col < CONFIG.BOARD_WIDTH; col++) {
-                const cellX = startX + col * CONFIG.CELL_SIZE;
-                const cellColor = board.grid[row][col];
-                
-                // 색상 객체 찾기
-                let colorObj = null;
-                for (const [type, colors] of Object.entries(TETROMINO_COLORS)) {
-                    if (colors.base === cellColor) {
-                        colorObj = colors;
-                        break;
-                    }
-                }
-                if (!colorObj) colorObj = { light: cellColor, base: cellColor, dark: cellColor };
-                
-                // 각 셀에 대한 사라지는 효과 (간소화 - 회전 제거)
-                const cellEffect = this.scene.add.graphics();
-                cellEffect.fillStyle(cellColor, 0.8); // 그라디언트 대신 단색
-                cellEffect.fillRoundedRect(cellX + 1, y + 1, CONFIG.CELL_SIZE - 2, CONFIG.CELL_SIZE - 2, 4);
-                
-                // 간단한 글로우 효과
-                cellEffect.lineStyle(2, 0x00f5ff, 0.5); // 두께와 투명도 줄임
-                cellEffect.strokeRoundedRect(cellX + 1, y + 1, CONFIG.CELL_SIZE - 2, CONFIG.CELL_SIZE - 2, 4);
-                
-                cellEffect.setDepth(998);
-                
-                // 셀 사라지는 애니메이션 (간소화 - 스케일만)
-                const delay = col * 8; // 딜레이 단축
-                
-                this.scene.tweens.add({
-                    targets: cellEffect,
-                    alpha: { from: 0.8, to: 0 },
-                    scaleX: { from: 1, to: 0 },
-                    scaleY: { from: 1, to: 0 },
-                    duration: 200, // 시간 단축
-                    delay: delay,
-                    ease: 'Power2',
-                    onComplete: () => cellEffect.destroy()
-                });
-            }
         });
         
-        // 3. 텍스트 애니메이션 효과 (문구만 표시)
+        // 텍스트 메시지
         const textMessages = {
-            1: { text: 'SINGLE', color: '#00f5ff', size: 48 },
-            2: { text: 'DOUBLE', color: '#ff6b9d', size: 52 },
-            3: { text: 'TRIPLE', color: '#ffd700', size: 56 },
-            4: { text: 'TETRIS!', color: '#ffd700', size: 60 }
+            1: { text: 'SINGLE', color: '#00f5ff', size: 36 },
+            2: { text: 'DOUBLE', color: '#ff6b9d', size: 40 },
+            3: { text: 'TRIPLE', color: '#ffd700', size: 44 },
+            4: { text: 'TETRIS!', color: '#ffd700', size: 48 }
         };
         
         const message = textMessages[count] || textMessages[1];
         const centerX = this.scene.cameras.main.centerX;
         
-        // 메인 텍스트 (배경 효과 제거)
         const text = this.scene.add.text(
             centerX,
             centerY,
             message.text,
             {
                 fontSize: message.size + 'px',
-                fontFamily: 'Orbitron, monospace',
+                fontFamily: 'Arial, sans-serif',
                 fontStyle: 'bold',
                 color: message.color,
                 stroke: '#000000',
-                strokeThickness: 6,
-                shadow: {
-                    offsetX: 0,
-                    offsetY: 0,
-                    color: message.color,
-                    blur: 20,
-                    stroke: true,
-                    fill: true
-                }
+                strokeThickness: 4
             }
         );
         text.setOrigin(0.5);
         text.setDepth(1002);
         text.setAlpha(0);
-        text.setScale(0);
         
-        // 텍스트 등장 애니메이션
+        // 텍스트 애니메이션 (간소화)
         this.scene.tweens.add({
             targets: text,
             alpha: { from: 0, to: 1 },
-            scale: { from: 0, to: 1.0 },
-            duration: 200,
-            ease: 'Power2',
-            onComplete: () => {
-                text.setScale(1.0);
-            }
+            scale: { from: 0.5, to: 1.0 },
+            duration: 150,
+            ease: 'Power2'
         });
         
-        // 콤보 문구 표시 (콤보 2 이상일 때)
+        // 콤보 텍스트 (간소화)
         let comboText = null;
         if (combo > 1) {
-            const comboColors = {
-                2: { color: '#ff6b9d', glowColor: 0xff6b9d },
-                3: { color: '#ffd700', glowColor: 0xffd700 },
-                4: { color: '#32cd32', glowColor: 0x32cd32 },
-                5: { color: '#ff1493', glowColor: 0xff1493 }
-            };
-            const comboStyle = comboColors[Math.min(combo, 5)] || { color: '#ff1493', glowColor: 0xff1493 };
-            const comboSize = Math.min(48 + (combo - 2) * 4, 64); // 콤보가 높을수록 크게
-            
-            // 콤보 텍스트 (배경 효과 제거)
             comboText = this.scene.add.text(
                 centerX,
-                centerY + 120,
+                centerY + 60,
                 `COMBO x${combo}!`,
                 {
-                    fontSize: comboSize + 'px',
-                    fontFamily: 'Orbitron, monospace',
+                    fontSize: '32px',
+                    fontFamily: 'Arial, sans-serif',
                     fontStyle: 'bold',
-                    color: comboStyle.color,
+                    color: '#ff6b9d',
                     stroke: '#000000',
-                    strokeThickness: 5,
-                    shadow: {
-                        offsetX: 0,
-                        offsetY: 0,
-                        color: comboStyle.color,
-                        blur: 15,
-                        stroke: true,
-                        fill: true
-                    }
+                    strokeThickness: 3
                 }
             );
             comboText.setOrigin(0.5);
             comboText.setDepth(1002);
             comboText.setAlpha(0);
-            comboText.setScale(0);
             
-            // 콤보 텍스트 등장 애니메이션
             this.scene.tweens.add({
                 targets: comboText,
                 alpha: { from: 0, to: 1 },
-                scale: { from: 0, to: 1.0 },
-                duration: 200,
-                delay: 100,
-                ease: 'Power2',
-                onComplete: () => {
-                    comboText.setScale(1.0);
-                }
-            });
-            
-            // 콤보 텍스트 사라지는 애니메이션 (더 빠르게)
-            this.scene.tweens.add({
-                targets: comboText,
-                alpha: { from: 1, to: 0 },
-                scale: { from: 1.0, to: 1.4 },
-                y: { from: centerY + 120, to: centerY + 60 },
-                duration: 300, // 400 -> 300
-                delay: 400, // 800 -> 400으로 단축
-                ease: 'Power2',
-                onComplete: () => {
-                    if (comboText) comboText.destroy();
-                }
-            });
-        }
-        
-        // 4. 서클 웨이브 효과 (간소화 - 한 줄일 때는 1개만)
-        const waveCount = count === 1 ? 1 : 2; // 한 줄일 때는 1개만, 여러 줄일 때는 2개
-        const waves = []; // 웨이브들을 저장하여 텍스트와 함께 사라지게 함
-        
-        for (let i = 0; i < waveCount; i++) {
-            const wave = this.scene.add.circle(
-                startX + boardWidth / 2,
-                lineCenterY,
-                10,
-                0x00f5ff,
-                0.5 // 투명도 줄임
-            );
-            wave.setDepth(999);
-            wave.setStrokeStyle(2, 0x00f5ff, 0.6); // 두께와 투명도 줄임
-            waves.push(wave);
-            
-            // 웨이브 확장 애니메이션 (간소화)
-            this.scene.tweens.add({
-                targets: wave,
-                radius: { from: 10, to: boardWidth * 0.5 }, // 크기 줄임
-                alpha: { from: 0.5, to: 0 }, // 완전히 사라지게
-                duration: 200, // 더 짧게
-                delay: i * 30, // 더 빠르게
+                duration: 150,
+                delay: 50,
                 ease: 'Power2'
             });
+            
+            this.scene.tweens.add({
+                targets: comboText,
+                alpha: 0,
+                y: centerY + 40,
+                duration: 200,
+                delay: 350,
+                ease: 'Power2',
+                onComplete: () => comboText && comboText.destroy()
+            });
         }
         
-        // 텍스트 사라지는 애니메이션 (더 빠르게) - 웨이브도 함께 사라지게
-        const textDisplayTime = 400; // 텍스트 표시 시간
-        const textFadeOutDuration = 300; // 텍스트 사라지는 시간
-        const waveFadeOutDuration = 150; // 웨이브 사라지는 시간
-        
+        // 텍스트 사라지는 애니메이션
         this.scene.tweens.add({
             targets: text,
-            alpha: { from: 1, to: 0 },
-            scale: { from: 1.0, to: 1.2 }, // 스케일 줄임
-            y: { from: centerY, to: centerY - 40 }, // 이동 거리 줄임
-            duration: textFadeOutDuration,
-            delay: textDisplayTime,
+            alpha: 0,
+            y: centerY - 30,
+            duration: 200,
+            delay: 300,
             ease: 'Power2',
             onComplete: () => {
                 text.destroy();
-                // 텍스트가 사라질 때 웨이브도 함께 사라지게
-                let wavesDestroyed = 0;
-                const totalWaves = waves.length;
-                
-                if (totalWaves === 0) {
-                    // 웨이브가 없으면 즉시 플래그 리셋
-                    this.isClearingLines = false;
-                } else {
-                    waves.forEach(wave => {
-                        if (wave && wave.active) {
-                            this.scene.tweens.add({
-                                targets: wave,
-                                alpha: { from: wave.alpha, to: 0 },
-                                scale: { from: wave.scaleX, to: wave.scaleX * 1.2 },
-                                duration: waveFadeOutDuration,
-                                ease: 'Power2',
-                                onComplete: () => {
-                                    wave.destroy();
-                                    wavesDestroyed++;
-                                    // 모든 웨이브가 사라진 후 플래그 리셋
-                                    if (wavesDestroyed === totalWaves) {
-                                        this.isClearingLines = false;
-                                    }
-                                }
-                            });
-                        } else {
-                            wavesDestroyed++;
-                            if (wavesDestroyed === totalWaves) {
-                                this.isClearingLines = false;
-                            }
-                        }
-                    });
-                }
+                this.isClearingLines = false;
             }
         });
         
-        // 5. 파티클 효과 (간소화 - 한 줄일 때는 제거)
+        // 파티클 효과 (2줄 이상일 때만, 간소화)
         if (count > 1) {
             this.createLineClearParticles(startX, lineCenterY, boardWidth, count);
         }
         
-        // 6. 화면 줌 효과 제거 (너무 화려함)
-        
-        // 플래시 효과 제거 (배경 효과 없음)
-        
-        // 텍스트와 웨이브가 완전히 사라지는 시간 계산 (위에서 선언된 변수 사용)
-        // 텍스트: 400ms delay + 300ms duration = 700ms
-        // 웨이브: 텍스트 사라질 때 함께 사라지므로 추가 150ms = 700ms + 150ms = 850ms
-        const totalTextAndWaveTime = textDisplayTime + textFadeOutDuration + waveFadeOutDuration; // 850ms
-        
-        // 가장 긴 애니메이션 시간을 기준으로 플래그 해제
-        const totalAnimationTime = totalTextAndWaveTime + 50; // 안전 마진 50ms
-        
-        // 플래그는 텍스트와 웨이브가 사라질 때 리셋됨 (위의 onComplete에서 처리)
-        // 안전을 위해 최대 시간 후에도 플래그를 리셋 (백업)
-        this.scene.time.delayedCall(totalAnimationTime + 200, () => {
-            // 플래그가 아직 true인 경우 강제로 리셋 (안전장치)
+        // 안전 플래그 리셋
+        this.scene.time.delayedCall(600, () => {
             if (this.isClearingLines) {
                 this.isClearingLines = false;
             }
@@ -1242,26 +1014,26 @@ export class TetrisRenderer {
     }
     
     createLineClearParticles(x, y, width, count) {
-        // 파티클 색상 (줄 수에 따라)
+        // 파티클 수를 대폭 감소하여 성능 개선
         const colors = [0x00f5ff, 0xff6b9d, 0xffd700, 0x32cd32, 0xff1493];
         const color = colors[Math.min(count - 1, colors.length - 1)];
         
-        // 왼쪽에서 오른쪽으로 스캔하는 파티클 효과 (더 많이!)
-        const scanCount = Math.floor(30 * impactIntensity);
-        for (let i = 0; i < scanCount; i++) {
+        // 간소화된 파티클 효과 (기존 대비 80% 감소)
+        const particleCount = Math.min(count * 3, 10); // 최대 10개
+        
+        for (let i = 0; i < particleCount; i++) {
             const particle = this.scene.add.circle(
-                x + (width / scanCount) * i,
+                x + (width / particleCount) * i + width / (particleCount * 2),
                 y,
-                4 + Math.random() * 4,
+                3 + Math.random() * 2,
                 color,
                 1
             );
             
             particle.setDepth(999);
             
-            // 파티클이 위아래로 퍼지며 사라짐
-            const angle = (Math.random() - 0.5) * Math.PI * 0.8;
-            const distance = 50 + Math.random() * 80;
+            const angle = (Math.random() - 0.5) * Math.PI * 0.6;
+            const distance = 30 + Math.random() * 40;
             const targetX = particle.x + Math.cos(angle) * distance;
             const targetY = particle.y + Math.sin(angle) * distance;
             
@@ -1271,125 +1043,17 @@ export class TetrisRenderer {
                 y: targetY,
                 alpha: { from: 1, to: 0 },
                 scale: { from: 1, to: 0 },
-                duration: 500 + Math.random() * 300,
+                duration: 300,
                 ease: 'Power2',
                 onComplete: () => particle.destroy()
             });
         }
-        
-        // 중앙에서 강력한 폭발 효과 (더 많이!)
-        const explosionCount = Math.floor(25 * impactIntensity);
-        for (let i = 0; i < explosionCount; i++) {
-            const particle = this.scene.add.circle(
-                x + width / 2,
-                y,
-                4 + Math.random() * 5,
-                color,
-                1
-            );
-            
-            particle.setDepth(999);
-            
-            const angle = (Math.PI * 2 / explosionCount) * i;
-            const distance = 60 + Math.random() * 80;
-            const targetX = particle.x + Math.cos(angle) * distance;
-            const targetY = particle.y + Math.sin(angle) * distance;
-            
-            this.scene.tweens.add({
-                targets: particle,
-                x: targetX,
-                y: targetY,
-                alpha: { from: 1, to: 0 },
-                scale: { from: 1, to: 0 },
-                rotation: Math.PI * 2,
-                duration: 600 + Math.random() * 300,
-                ease: 'Power3',
-                onComplete: () => particle.destroy()
-            });
-        }
-        
-        // 양쪽 끝에서 폭발 효과 (더 강하게!)
-        for (let side = 0; side < 2; side++) {
-            const sideX = side === 0 ? x : x + width;
-            const sideCount = Math.floor(15 * impactIntensity);
-            for (let i = 0; i < sideCount; i++) {
-                const particle = this.scene.add.circle(
-                    sideX,
-                    y,
-                    4 + Math.random() * 4,
-                    color,
-                    1
-                );
-                
-                particle.setDepth(999);
-                
-                const angle = (side === 0 ? Math.PI : 0) + (Math.random() - 0.5) * Math.PI * 0.7;
-                const distance = 50 + Math.random() * 70;
-                const targetX = particle.x + Math.cos(angle) * distance;
-                const targetY = particle.y + Math.sin(angle) * distance;
-                
-                this.scene.tweens.add({
-                    targets: particle,
-                    x: targetX,
-                    y: targetY,
-                    alpha: { from: 1, to: 0 },
-                    scale: { from: 1, to: 0 },
-                    rotation: Math.PI,
-                    duration: 500 + Math.random() * 300,
-                    ease: 'Power2',
-                    onComplete: () => particle.destroy()
-                });
-            }
-        }
-        
-        // 별 모양 파티클 효과 (추가!) - 그래픽으로 별 그리기
-        for (let i = 0; i < Math.floor(12 * impactIntensity); i++) {
-            const starX = x + width / 2 + (Math.random() - 0.5) * width * 0.8;
-            const starY = y + (Math.random() - 0.5) * 100;
-            const starSize = 8 + Math.random() * 6;
-            
-            const star = this.scene.add.graphics();
-            star.fillStyle(color, 1);
-            star.lineStyle(2, color, 1);
-            
-            // 별 모양 그리기 (5각 별) - 원점 기준으로 그리기
-            star.beginPath();
-            for (let j = 0; j < 10; j++) {
-                const angle = (Math.PI / 5) * j - Math.PI / 2;
-                const radius = j % 2 === 0 ? starSize : starSize * 0.4;
-                const px = Math.cos(angle) * radius;
-                const py = Math.sin(angle) * radius;
-                if (j === 0) {
-                    star.moveTo(px, py);
-                } else {
-                    star.lineTo(px, py);
-                }
-            }
-            star.closePath();
-            star.fillPath();
-            star.strokePath();
-            
-            star.setPosition(starX, starY);
-            star.setDepth(999);
-            
-            const angle = Math.random() * Math.PI * 2;
-            const distance = 80 + Math.random() * 100;
-            const targetX = starX + Math.cos(angle) * distance;
-            const targetY = starY + Math.sin(angle) * distance;
-            
-            this.scene.tweens.add({
-                targets: star,
-                x: { from: starX, to: targetX },
-                y: { from: starY, to: targetY },
-                alpha: { from: 1, to: 0 },
-                scaleX: { from: 1, to: 0 },
-                scaleY: { from: 1, to: 0 },
-                rotation: Math.PI * 4,
-                duration: 700 + Math.random() * 300,
-                ease: 'Power3',
-                onComplete: () => star.destroy()
-            });
-        }
+    }
+    
+    // 보드 다시 그리기 강제
+    markBoardDirty() {
+        this.boardDirty = true;
+        this.lastBoardState = null;
     }
     
     update() {
@@ -1563,9 +1227,12 @@ export default class TetrisScene extends Phaser.Scene {
         this.cKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.C);
         this.pKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.P);
         
+        // 입력 가능 여부 체크 헬퍼
+        const canInput = () => this.isRunning && !this.gameState.isPaused && !this.gameState.isLocking;
+        
         // 키 반복 설정
         this.input.keyboard.on('keydown-LEFT', () => {
-            if (this.isRunning && !this.gameState.isPaused) {
+            if (canInput()) {
                 this.gameState.moveBlock(-1, 0);
                 this.playSound('move', 0.3);
                 this.renderer.update();
@@ -1573,7 +1240,7 @@ export default class TetrisScene extends Phaser.Scene {
         });
         
         this.input.keyboard.on('keydown-RIGHT', () => {
-            if (this.isRunning && !this.gameState.isPaused) {
+            if (canInput()) {
                 this.gameState.moveBlock(1, 0);
                 this.playSound('move', 0.3);
                 this.renderer.update();
@@ -1582,14 +1249,14 @@ export default class TetrisScene extends Phaser.Scene {
         
         // 소프트 드롭 (점수 없음, 빠른 낙하만)
         this.input.keyboard.on('keydown-DOWN', () => {
-            if (this.isRunning && !this.gameState.isPaused) {
+            if (canInput()) {
                 this.gameState.softDrop(false); // 점수 없음
                 this.renderer.update();
             }
         });
         
         this.input.keyboard.on('keydown-UP', () => {
-            if (this.isRunning && !this.gameState.isPaused) {
+            if (canInput()) {
                 this.gameState.rotateBlock();
                 this.playSound('rotate', 0.4);
                 this.renderer.update();
@@ -1597,7 +1264,7 @@ export default class TetrisScene extends Phaser.Scene {
         });
         
         this.spaceKey.on('down', () => {
-            if (this.isRunning && !this.gameState.isPaused) {
+            if (canInput()) {
                 this.gameState.hardDrop();
                 this.playSound('drop', 0.6);
                 this.renderer.update();
@@ -1605,7 +1272,7 @@ export default class TetrisScene extends Phaser.Scene {
         });
         
         this.cKey.on('down', () => {
-            if (this.isRunning && !this.gameState.isPaused) {
+            if (canInput()) {
                 this.gameState.hold();
                 this.playSound('hold', 0.4);
                 this.renderer.update();
@@ -1629,8 +1296,11 @@ export default class TetrisScene extends Phaser.Scene {
     update(time, delta) {
         if (!this.isRunning || this.gameState.isPaused) return;
         
+        // 라인 클리어 중에는 소프트 드롭 무시
+        const canDrop = !this.gameState.isLocking;
+        
         // 소프트 드롭 키를 누르고 있을 때 (점수 없이 빠른 낙하)
-        const isSoftDropping = this.cursors && this.cursors.down.isDown;
+        const isSoftDropping = canDrop && this.cursors && this.cursors.down.isDown;
         
         if (isSoftDropping) {
             if (!this.softDropTimer || time >= this.softDropTimer) {

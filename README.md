@@ -1,6 +1,6 @@
-# 🎮 테트리스 게임 (Tetris Game) - React 버전
+# 🎮 테트리스 게임 (Tetris Game)
 
-**React + Phaser 3 + 화려한 우주 테마**로 만든 모던한 테트리스 게임입니다.
+**React + Phaser 3 + Vite**로 만든 모던한 테트리스 게임입니다.
 
 <div align="center">
 
@@ -10,29 +10,27 @@
   <img src="https://img.shields.io/badge/🎮_지금_체험해보기-00D4FF?style=for-the-badge&logo=vercel&logoColor=white&labelColor=000011" alt="Play Now" />
 </a>
 
-
 </div>
 
 <div align="center">
 
 ![React](https://img.shields.io/badge/React-18.2.0-blue)
 ![Phaser 3](https://img.shields.io/badge/Phaser-3.70.0-blueviolet)
-![Vite](https://img.shields.io/badge/Vite-5.0.8-646CFF)
-![Version](https://img.shields.io/badge/Version-1.1.0-green)
+![Vite](https://img.shields.io/badge/Vite-5.4.21-646CFF)
+![Version](https://img.shields.io/badge/Version-1.2.0-green)
 
 </div>
 
 ## ✨ 주요 특징
 
 - ⚡ **React + Vite**: 빠른 개발 환경과 빌드
-- 🌌 **화려한 우주 배경**: Canvas 기반 동적 파티클 시스템 (500개 별, 50개 빛나는 별, 8개 유성, 6개 성운, 3개 은하수, 40개 블록 파티클)
-- 🎨 **3D 배경 디자인**: CSS 3D Transform을 활용한 입체적인 배경 애니메이션
-- 💎 **3D 블록 렌더링**: 그라디언트와 하이라이트로 입체감 있는 블록
-- 🎆 **줄 제거 효과**: 줄 제거 시 영어 메시지 표시 (SINGLE, DOUBLE, TRIPLE, TETRIS!), 콤보 메시지
+- 🌌 **우주 테마 배경**: Canvas 기반 동적 파티클 시스템 (성능 최적화)
+- 💎 **블록 렌더링**: 하이라이트와 테두리로 선명한 블록
+- 🎆 **줄 제거 효과**: SINGLE, DOUBLE, TRIPLE, TETRIS! 메시지 표시
 - 👻 **고스트 블록**: 블록이 떨어질 위치 미리보기
 - 🎯 **홀드 시스템**: 블록을 보관하고 재사용 가능
 - 👀 **다음 블록 미리보기**: 전략적 플레이 지원
-- 🔢 **콤보 시스템**: 연속 줄 제거 시 누적 보너스 및 화려한 메시지 표시
+- 🔢 **콤보 시스템**: 연속 줄 제거 시 누적 보너스
 - 🎵 **사운드 시스템**: 배경음악 및 효과음
 - ⚙️ **속도 조절**: 실시간 낙하 속도 조절 기능
 
@@ -50,7 +48,7 @@ npm install
 npm run dev
 ```
 
-브라우저에서 `http://localhost:3000` (또는 터미널에 표시된 포트)로 접속하세요.
+브라우저에서 `http://localhost:3000`으로 접속하세요.
 
 ### 프로덕션 빌드
 
@@ -75,10 +73,10 @@ npm run build
 
 | 줄 제거 | 점수 |
 |---------|------|
-| 1줄 | 40점 |
-| 2줄 | 100점 |
-| 3줄 | 300점 |
-| 4줄 (테트리스) | 1200점 |
+| 1줄 (SINGLE) | 40점 |
+| 2줄 (DOUBLE) | 100점 |
+| 3줄 (TRIPLE) | 300점 |
+| 4줄 (TETRIS!) | 1200점 |
 
 - **콤보 보너스**: 연속 줄 제거 시 (콤보-1) × 50점
 - **백투백 테트리스**: 연속 테트리스 시 점수 × 1.5배
@@ -89,108 +87,88 @@ npm run build
 Tetris-Game-main/
 ├── src/
 │   ├── components/
-│   │   ├── Background.jsx      # 3D 배경 컴포넌트
-│   │   ├── Background.css      # 3D 배경 스타일
+│   │   ├── Background.jsx      # 우주 배경 컴포넌트
+│   │   ├── Background.css      # 배경 스타일
 │   │   ├── TetrisGame.jsx      # 메인 게임 컴포넌트
-│   │   └── TetrisGame.css
+│   │   └── TetrisGame.css      # 게임 스타일
 │   ├── utils/
 │   │   ├── gameConfig.js       # 게임 설정
 │   │   └── gameClassesFull.js  # 게임 클래스 및 Phaser 씬
 │   ├── styles/
 │   │   ├── index.css           # 전역 스타일
 │   │   └── App.css             # 앱 스타일
-│   ├── App.jsx                  # 루트 컴포넌트
-│   └── main.jsx                 # 진입점
+│   ├── App.jsx                 # 루트 컴포넌트
+│   └── main.jsx                # 진입점
 ├── public/
-│   └── sounds/                  # 사운드 파일
-├── index.html                    # HTML 템플릿
-├── package.json                  # 의존성
-├── vite.config.js                # Vite 설정
-└── README.md                     # 이 파일
+│   └── sounds/                 # 사운드 파일
+├── index.html                  # HTML 템플릿
+├── package.json                # 의존성
+├── vite.config.js              # Vite 설정
+└── README.md                   # 이 파일
 ```
 
 ## 🛠 기술 스택
 
 - **프레임워크**: React 18.2.0
 - **게임 엔진**: Phaser 3.70.0
-- **빌드 도구**: Vite 5.0.8
-- **배경 렌더링**: HTML5 Canvas (동적 파티클 시스템)
-- **배경 디자인**: CSS 3D Transform (Perspective, Rotate)
+- **빌드 도구**: Vite 5.4.21
+- **배경 렌더링**: HTML5 Canvas
 - **게임 렌더링**: WebGL (GPU 가속)
-- **스타일링**: CSS3 (3D Transform, 그라디언트, 애니메이션)
+- **스타일링**: CSS3
 
-## 🌌 화려한 우주 테마 배경
+## 🌌 우주 테마 배경
 
-**Canvas 기반 동적 파티클 시스템**과 **CSS 3D Transform**을 결합한 역동적인 우주 배경을 구현했습니다.
+Canvas 기반 동적 파티클 시스템으로 구현된 우주 배경:
 
-### Canvas 파티클 시스템
-- **500개의 반짝이는 별**: 부드러운 깜빡임 애니메이션 (눈의 피로 최소화)
-- **50개의 빛나는 별**: 컬러 글로우와 별자리 연결선 효과 (적당한 밝기)
-- **8개의 유성**: 긴 꼬리(최대 200px), 파티클 효과, 다중 색상 그라데이션
-- **6개의 성운**: 이중 색상 그라데이션, 외곽 글로우, 부드러운 펄스 애니메이션 (7가지 색상)
-- **3개의 은하수**: 회전 애니메이션과 그라데이션 효과
-- **40개의 테트리스 블록 파티클**: 3D 하이라이트, 회전 애니메이션
-- **150개의 연결 파티클**: 그라데이션 연결선, 별자리 네트워크 효과
-
-### CSS 3D 효과
-- **3D 그리드**: Perspective transform으로 깊이감 있는 이중 그리드 패턴
-- **부드러운 애니메이션**: 실시간으로 변화하는 3D 회전 및 펄스 효과 (느린 속도로 눈의 피로 최소화)
-- **다층 그라데이션**: 8개 이상의 레이어로 구성된 배경 (적당한 투명도)
-- **성능 최적화**: `requestAnimationFrame`으로 부드러운 60fps 렌더링
+- **150개의 별**: 정적 렌더링으로 성능 최적화
+- **3개의 유성**: 그라데이션 꼬리 효과
+- **3개의 성운**: 방사형 그라데이션
+- **15개의 테트리스 블록 파티클**: 회전 애니메이션
+- **프레임 스킵**: 매 3프레임마다 업데이트하여 성능 향상
 
 ## 🔧 주요 기능
 
 ### 게임 기능
-- **속도 조절**: 우측 상단 슬라이더로 낙하 속도 조절 (400ms ~ 1200ms)
+- **속도 조절**: 슬라이더로 낙하 속도 조절 (400ms ~ 1200ms)
 - **HUD 표시**: 줄 수, 점수, 콤보 실시간 표시
 - **홀드/다음 블록**: 전략적 플레이 지원
 - **일시정지**: P 키로 게임 일시정지/재개
 - **SRS 회전 시스템**: 현대 테트리스 표준 회전 규칙 (벽 킥 지원)
 - **7-Bag 시스템**: 공정한 블록 분배 시스템
-- **콤보 메시지**: 연속 줄 제거 시 화려한 콤보 메시지 표시
+
+## 📝 업데이트 내역
+
+### v1.2.0 (최신)
+- ⚡ **대규모 성능 최적화**
+  - 배경 파티클 75% 감소 (700+ → 170개)
+  - O(n²) 연결선 계산 제거
+  - 렌더러 더티 플래그 패턴 적용
+  - 프레임 스킵 적용 (매 3프레임당 1회 업데이트)
+  - CSS 애니메이션 정적 렌더링으로 전환
+- 🐛 **버그 수정**
+  - 라인 클리어 중 블록 중복 생성 버그 수정
+  - 라인 클리어 후 다음 블록 바뀌는 버그 수정
+  - 렌더링 캐싱 버그 수정
+  - `impactIntensity` 미정의 오류 수정
+- 🎨 **UI 개선**
+  - 줄 제거 효과 간소화
+  - 블록 스타일 최적화
+
+### v1.1.0
+- 🌌 화려한 우주 배경 추가
+- 🎆 줄 제거 효과 (SINGLE, DOUBLE, TRIPLE, TETRIS!)
+- 🔢 콤보 시스템
+- 🎵 사운드 시스템
+
+### v1.0.0
+- 🎮 기본 테트리스 게임 구현
+- 👻 고스트 블록
+- 🎯 홀드 시스템
+- ⚙️ 속도 조절
 
 ## 📄 라이선스
 
 [MIT License](LICENSE)
-
-## 📝 업데이트 내역
-
-### 2026년 최신 버전 (v1.1.0)
-- 🌌 **화려한 우주 배경 업데이트**: Canvas 기반 동적 파티클 시스템 대폭 강화
-  - 500개의 반짝이는 별 (300개 → 500개, 부드러운 깜빡임)
-  - 50개의 빛나는 별 추가 (컬러 글로우, 별자리 연결선, 적당한 밝기)
-  - 8개의 유성 (5개 → 8개, 긴 꼬리 최대 200px, 파티클 효과)
-  - 6개의 성운 (4개 → 6개, 이중 색상 그라데이션, 부드러운 펄스)
-  - 3개의 은하수 효과 추가 (회전 애니메이션)
-  - 40개의 테트리스 블록 파티클 (20개 → 40개, 3D 하이라이트)
-  - 150개의 연결 파티클 (100개 → 150개, 그라데이션 연결선)
-- ✨ **3D 배경 디자인 강화**: CSS 3D Transform 다층 효과
-  - 8개 이상의 그라데이션 레이어 (적당한 투명도)
-  - 이중 그리드 패턴
-  - 부드러운 회전 및 펄스 애니메이션 (느린 속도)
-- 🎨 **3D 블록 렌더링**: 그라디언트 및 하이라이트로 입체감 강화
-- 🎆 **줄 제거 효과 개선**: 영어 메시지 표시 (SINGLE, DOUBLE, TRIPLE, TETRIS!), 콤보 메시지
-- 👁️ **배경 깜빡임 조정**: 눈의 피로 최소화를 위한 깜빡임 속도 및 밝기 조정
-  - 별 깜빡임 속도 약 80% 감소
-  - 성운 펄스 속도 약 85% 감소
-  - CSS 애니메이션 속도 2-3배 감소
-  - 모든 글로우 효과 및 투명도 조정
-- ⚡ **성능 최적화**: 줄 제거 애니메이션 시간 단축 (50% 개선)
-- 🐛 **버그 수정**: 줄 제거 로직 개선, 중복 효과 방지, 플래그 리셋 타이밍 개선
-- 📝 **README 최신화**: 최신 기능 반영 및 문서 개선
-
----
-
-## 🔎 방문
-
-<div align="center">
-
-<a href="https://www.instagram.com/tae_system/" target="_blank" rel="noopener noreferrer">
-  <img src="https://upload.wikimedia.org/wikipedia/commons/a/a5/Instagram_icon.png" alt="Instagram" width="32" height="32" style="vertical-align: middle; margin-right: 8px;">
-  <span style="font-size: 16px; font-weight: 600;">@tae_system</span>
-</a>
-
-</div>
 
 ---
 
