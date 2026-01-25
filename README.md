@@ -172,4 +172,12 @@ Canvas 기반 동적 파티클 시스템으로 구현된 우주 배경:
 
 ---
 
+<div align="center">
+
+### 🔎 방문
+
+[![Instagram](https://img.shields.io/badge/Instagram-@tae__system-E4405F?style=for-the-badge&logo=instagram&logoColor=white)](https://www.instagram.com/tae_system/)
+
 **Copyright © 2026 Tae-System**
+
+</div>
