@@ -1071,6 +1071,10 @@ export default class TetrisScene extends Phaser.Scene {
         super({ key: 'TetrisScene' });
         this.soundEnabled = true;
         this.sounds = {};
+        this.gameOverOverlay = null;
+        this.gameOverText = null;
+        this.gameOverScoreText = null;
+        this.gameOverRestartText = null;
     }
 
     preload() {
@@ -1377,75 +1381,77 @@ export default class TetrisScene extends Phaser.Scene {
         }
     }
     
+    clearGameOverUI() {
+        if (this.gameOverOverlay) {
+            this.gameOverOverlay.destroy();
+            this.gameOverOverlay = null;
+        }
+        if (this.gameOverText) {
+            this.gameOverText.destroy();
+            this.gameOverText = null;
+        }
+        if (this.gameOverScoreText) {
+            this.gameOverScoreText.destroy();
+            this.gameOverScoreText = null;
+        }
+        if (this.gameOverRestartText) {
+            this.gameOverRestartText.destroy();
+            this.gameOverRestartText = null;
+        }
+    }
+
     gameOver() {
+        if (this.gameOverOverlay) return;
         this.isRunning = false;
-        
-        // 배경음악 정지 (안전하게)
+
         try {
             if (this.sounds['bgm'] && this.sounds['bgm'].isPlaying) {
                 this.sounds['bgm'].stop();
             }
-        } catch (e) {
-            // 배경음악 정지 실패 시 무시
-        }
-        
-        // 게임 오버 사운드
+        } catch (e) {}
+
         this.playSound('game_over', 0.8);
-        
-        // 게임 오버 효과
-        const overlay = this.add.graphics();
-        overlay.fillStyle(0x000000, 0.7);
-        overlay.fillRect(0, 0, this.cameras.main.width, this.cameras.main.height);
-        
-        const gameOverText = this.add.text(
+
+        this.gameOverOverlay = this.add.graphics();
+        this.gameOverOverlay.fillStyle(0x000000, 0.7);
+        this.gameOverOverlay.fillRect(0, 0, this.cameras.main.width, this.cameras.main.height);
+        this.gameOverOverlay.setDepth(2000);
+
+        this.gameOverText = this.add.text(
             this.cameras.main.width / 2,
             this.cameras.main.height / 2 - 50,
             'GAME OVER',
-            {
-            fontSize: '48px',
-            color: '#ff0040',
-                fontFamily: 'Arial',
-            fontStyle: 'bold'
-            }
-        ).setOrigin(0.5);
-        
-        const scoreText = this.add.text(
+            { fontSize: '48px', color: '#ff0040', fontFamily: 'Arial', fontStyle: 'bold' }
+        ).setOrigin(0.5).setDepth(2001);
+
+        this.gameOverScoreText = this.add.text(
             this.cameras.main.width / 2,
             this.cameras.main.height / 2 + 20,
             `최종 점수: ${this.gameState.score.toLocaleString()}`,
-            {
-            fontSize: '24px',
-            color: '#ffffff',
-                fontFamily: 'Arial'
-            }
-        ).setOrigin(0.5);
-        
-        const restartText = this.add.text(
+            { fontSize: '24px', color: '#ffffff', fontFamily: 'Arial' }
+        ).setOrigin(0.5).setDepth(2001);
+
+        this.gameOverRestartText = this.add.text(
             this.cameras.main.width / 2,
             this.cameras.main.height / 2 + 80,
             '새 게임 버튼을 눌러 다시 시작',
-            {
-                fontSize: '18px',
-                color: '#00f5ff',
-                fontFamily: 'Arial'
-            }
-        ).setOrigin(0.5);
+            { fontSize: '18px', color: '#00f5ff', fontFamily: 'Arial' }
+        ).setOrigin(0.5).setDepth(2001);
     }
-    
+
     newGame() {
+        this.clearGameOverUI();
         this.gameState.reset();
         this.isRunning = true;
+        this.renderer.markBoardDirty();
         this.renderer.update();
         this.updateHUD();
-        
-        // 배경음악 다시 시작 (안전하게)
+
         try {
             if (this.sounds['bgm'] && !this.sounds['bgm'].isPlaying) {
                 this.sounds['bgm'].play();
             }
-        } catch (e) {
-            // 배경음악 재생 실패 시 무시
-        }
+        } catch (e) {}
     }
 }
 
