@@ -56,8 +56,6 @@ function TetrisGame() {
     const closeHelpBtn = document.getElementById('close-help')
     const newGameBtn = document.getElementById('new-game-btn')
     const giveUpBtn = document.getElementById('give-up-btn')
-    const speedSlider = document.getElementById('speed-slider')
-    const speedValue = document.getElementById('speed-value')
 
     // 이벤트 핸들러 함수들 (cleanup을 위해 별도로 정의)
     const handleHelpClick = () => {
@@ -101,33 +99,6 @@ function TetrisGame() {
       audioBtn.addEventListener('click', handleAudioToggle)
     }
 
-    const handleSpeedSliderInput = (e) => {
-      const speed = parseInt(e.target.value)
-      updateSpeedDisplay(speed)
-      localStorage.setItem('tetrisFallSpeed', speed.toString())
-      
-      if (game.scene.scenes[0] && game.scene.scenes[0].gameState) {
-        game.scene.scenes[0].gameState.fallSpeed = speed
-      }
-    }
-
-    function updateSpeedDisplay(speed) {
-      if (!speedValue) return
-      let label = ''
-      if (speed <= 500) {
-        label = '매우 빠름'
-      } else if (speed <= 700) {
-        label = '빠름'
-      } else if (speed <= 900) {
-        label = '보통'
-      } else if (speed <= 1100) {
-        label = '느림'
-      } else {
-        label = '매우 느림'
-      }
-      speedValue.textContent = label
-    }
-
     // 조작법 모달
     if (helpBtn) {
       helpBtn.addEventListener('click', handleHelpClick)
@@ -147,14 +118,6 @@ function TetrisGame() {
       giveUpBtn.addEventListener('click', handleGiveUpClick)
     }
 
-    // 속도 조절 슬라이더
-    if (speedSlider) {
-      const savedSpeed = parseInt(localStorage.getItem('tetrisFallSpeed') || '800')
-      speedSlider.value = savedSpeed
-      updateSpeedDisplay(savedSpeed)
-      speedSlider.addEventListener('input', handleSpeedSliderInput)
-    }
-
     return () => {
       // 이벤트 리스너 제거
       if (helpBtn) {
@@ -171,9 +134,6 @@ function TetrisGame() {
       }
       if (audioBtn) {
         audioBtn.removeEventListener('click', handleAudioToggle)
-      }
-      if (speedSlider) {
-        speedSlider.removeEventListener('input', handleSpeedSliderInput)
       }
 
       // Phaser 게임 정리
@@ -270,21 +230,6 @@ function TetrisGame() {
             </div>
           </div>
 
-          <div className="speed-control">
-            <div className="speed-control-label">⚡ 낙하 속도</div>
-            <div className="speed-slider-container">
-              <input 
-                type="range" 
-                min="400" 
-                max="1200" 
-                defaultValue="800" 
-                step="50" 
-                className="speed-slider" 
-                id="speed-slider"
-              />
-              <div className="speed-value" id="speed-value">보통</div>
-            </div>
-          </div>
         </div>
 
         <div ref={containerRef} id="game-container" />

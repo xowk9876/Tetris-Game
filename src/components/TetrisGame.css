@@ -183,14 +183,13 @@
 }
 
 /* ==========================================
-   게임 헤더 (HUD + 속도 조절)
+   게임 헤더 (HUD)
    ========================================== */
 .game-header {
   display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  padding: 12px 20px;
-  gap: 20px;
+  justify-content: center;
+  align-items: center;
+  padding: 10px 20px;
   flex-shrink: 0;
 }
 
@@ -296,103 +295,6 @@
   text-shadow: 
     0 0 8px rgba(0, 245, 255, 0.4),
     0 1px 2px rgba(0, 0, 0, 0.8);
-}
-
-/* ==========================================
-   속도 조절 UI
-   ========================================== */
-.speed-control {
-  background: rgba(15, 15, 35, 0.85);
-  backdrop-filter: blur(20px);
-  border: 1px solid rgba(0, 245, 255, 0.3);
-  border-radius: 12px;
-  padding: 10px 16px;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  min-width: 190px;
-  flex-shrink: 0;
-  box-shadow: 
-    0 8px 32px rgba(0, 0, 0, 0.5),
-    0 0 20px rgba(0, 245, 255, 0.2),
-    inset 0 1px 0 rgba(255, 255, 255, 0.1);
-  pointer-events: auto;
-}
-
-.speed-control-label {
-  font-family: 'Orbitron', monospace;
-  color: rgba(255, 255, 255, 0.7);
-  font-size: 11px;
-  text-transform: uppercase;
-  letter-spacing: 1.5px;
-  text-align: center;
-  font-weight: 600;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-rendering: optimizeLegibility;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
-}
-
-.speed-slider-container {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.speed-slider {
-  flex: 1;
-  height: 6px;
-  border-radius: 3px;
-  background: rgba(0, 245, 255, 0.2);
-  outline: none;
-  -webkit-appearance: none;
-  appearance: none;
-}
-
-.speed-slider::-webkit-slider-thumb {
-  -webkit-appearance: none;
-  appearance: none;
-  width: 18px;
-  height: 18px;
-  border-radius: 50%;
-  background: #00f5ff;
-  cursor: pointer;
-  box-shadow: 0 0 10px #00f5ff;
-  transition: all 0.2s ease;
-}
-
-.speed-slider::-webkit-slider-thumb:hover {
-  transform: scale(1.2);
-  box-shadow: 0 0 15px #00f5ff;
-}
-
-.speed-slider::-moz-range-thumb {
-  width: 18px;
-  height: 18px;
-  border-radius: 50%;
-  background: #00f5ff;
-  cursor: pointer;
-  border: none;
-  box-shadow: 0 0 10px #00f5ff;
-  transition: all 0.2s ease;
-}
-
-.speed-slider::-moz-range-thumb:hover {
-  transform: scale(1.2);
-  box-shadow: 0 0 15px #00f5ff;
-}
-
-.speed-value {
-  font-family: 'Orbitron', monospace;
-  color: #ffffff;
-  font-size: 12px;
-  font-weight: 700;
-  min-width: 60px;
-  text-align: center;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-rendering: optimizeLegibility;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
 }
 
 /* ==========================================
@@ -605,11 +507,6 @@
     gap: 10px;
   }
 
-  .speed-control {
-    width: 100%;
-    min-width: auto;
-  }
-
   .hud-panel {
     padding: 8px 12px;
     min-width: 72px;
@@ -721,23 +618,6 @@
 
   .hud-value {
     font-size: 13px;
-  }
-
-  /* 속도 슬라이더: 모바일에서 컴팩트 */
-  .speed-control {
-    min-width: 0;
-    flex: 0 0 auto;
-    width: auto;
-    padding: 6px 10px;
-  }
-
-  .speed-control-label {
-    font-size: 9px;
-  }
-
-  .speed-value {
-    font-size: 10px;
-    min-width: 42px;
   }
 
   /* 게임 캔버스: 남은 공간 채우기 */

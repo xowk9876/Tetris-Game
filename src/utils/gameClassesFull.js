@@ -221,7 +221,7 @@ export class GameState {
         this.fallTimer = 0;
         // 저장된 속도 불러오기 (없으면 기본값)
         const savedSpeed = parseInt(localStorage.getItem('tetrisFallSpeed') || CONFIG.BASE_FALL_SPEED.toString());
-        this.fallSpeed = savedSpeed;
+        this.fallSpeed = CONFIG.BASE_FALL_SPEED; // 항상 보통(800ms) 고정
         
         this.spawnNextBlock();
     }
@@ -1134,30 +1134,6 @@ export default class TetrisScene extends Phaser.Scene {
         
         // 게임 루프 시작
         this.isRunning = true;
-        
-        // 속도 슬라이더와 게임 상태 동기화
-        const speedSlider = document.getElementById('speed-slider');
-        if (speedSlider) {
-            speedSlider.value = this.gameState.fallSpeed;
-            // 속도 표시 업데이트
-            const speedValue = document.getElementById('speed-value');
-            if (speedValue) {
-                const speed = this.gameState.fallSpeed;
-                let label = '';
-                if (speed <= 500) {
-                    label = '매우 빠름';
-                } else if (speed <= 700) {
-                    label = '빠름';
-                } else if (speed <= 900) {
-                    label = '보통';
-                } else if (speed <= 1100) {
-                    label = '느림';
-                } else {
-                    label = '매우 느림';
-                }
-                speedValue.textContent = label;
-            }
-        }
         
         // 로딩 화면 숨기기
         setTimeout(() => {
