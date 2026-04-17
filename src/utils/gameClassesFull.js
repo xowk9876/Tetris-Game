@@ -1079,7 +1079,9 @@ export class TetrisRenderer {
 export default class TetrisScene extends Phaser.Scene {
     constructor() {
         super({ key: 'TetrisScene' });
-        this.soundEnabled = true;
+        // localStorage에서 오디오 설정 복원 (없으면 기본 ON)
+        const savedAudio = localStorage.getItem('tetrisAudioEnabled');
+        this.soundEnabled = savedAudio === null ? true : savedAudio === 'true';
         this.sounds = {};
         this.gameOverOverlay = null;
         this.gameOverText = null;
@@ -1185,14 +1187,43 @@ export default class TetrisScene extends Phaser.Scene {
             }
         });
         
-        // 배경음악 시작 (안전하게)
+        // 배경음악 시작 (soundEnabled 상태 확인)
         try {
-            if (this.sounds['bgm']) {
+            if (this.sounds['bgm'] && this.soundEnabled) {
                 this.sounds['bgm'].play();
             }
         } catch (e) {
             // 배경음악 재생 실패 시 무시
         }
+    }
+    
+    // 외부(버튼)에서 오디오 ON/OFF 토글
+    toggleAudio() {
+        this.soundEnabled = !this.soundEnabled;
+        localStorage.setItem('tetrisAudioEnabled', this.soundEnabled.toString());
+
+        try {
+            if (this.sounds['bgm']) {
+                if (this.soundEnabled) {
+                    // 게임이 진행 중이면 BGM 재개
+                    if (!this.gameState.isGameOver && !this.gameState.isPaused) {
+                        this.sounds['bgm'].resume();
+                        if (!this.sounds['bgm'].isPlaying) {
+                            this.sounds['bgm'].play();
+                        }
+                    }
+                } else {
+                    // 오디오 OFF: BGM 일시정지
+                    if (this.sounds['bgm'].isPlaying) {
+                        this.sounds['bgm'].pause();
+                    }
+                }
+            }
+        } catch (e) {
+            // 무시
+        }
+
+        return this.soundEnabled;
     }
     
     playSound(soundKey, volume = 0.5) {

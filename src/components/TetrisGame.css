@@ -125,6 +125,64 @@
 }
 
 /* ==========================================
+   오디오 토글 버튼
+   ========================================== */
+.audio-toggle-btn {
+  position: absolute;
+  right: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(0, 245, 255, 0.5);
+  background: rgba(0, 245, 255, 0.08);
+  color: #00f5ff;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px;
+  transition: all 0.25s ease;
+  flex-shrink: 0;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 0 10px rgba(0, 245, 255, 0.15);
+}
+
+.audio-toggle-btn svg {
+  width: 18px;
+  height: 18px;
+  display: block;
+}
+
+.audio-toggle-btn:hover {
+  background: rgba(0, 245, 255, 0.2);
+  border-color: rgba(0, 245, 255, 0.9);
+  box-shadow: 0 0 18px rgba(0, 245, 255, 0.4);
+  transform: translateY(-50%) scale(1.1);
+}
+
+.audio-toggle-btn:active {
+  transform: translateY(-50%) scale(0.95);
+}
+
+/* OFF (음소거) 상태 */
+.audio-toggle-btn.muted {
+  color: rgba(255, 255, 255, 0.3);
+  border-color: rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.04);
+  box-shadow: none;
+}
+
+.audio-toggle-btn.muted:hover {
+  color: rgba(255, 255, 255, 0.6);
+  border-color: rgba(255, 255, 255, 0.5);
+  background: rgba(255, 255, 255, 0.08);
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.1);
+  transform: translateY(-50%) scale(1.1);
+}
+
+/* ==========================================
    게임 헤더 (HUD + 속도 조절)
    ========================================== */
 .game-header {

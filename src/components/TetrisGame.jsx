@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import Phaser from 'phaser'
 import TetrisScene from '../utils/gameClassesFull'
 import './TetrisGame.css'
@@ -7,6 +7,11 @@ function TetrisGame() {
   const gameRef = useRef(null)
   const containerRef = useRef(null)
   const helpModalRef = useRef(null)
+  // localStorage에서 초기 오디오 상태 로드
+  const [audioEnabled, setAudioEnabled] = useState(() => {
+    const saved = localStorage.getItem('tetrisAudioEnabled')
+    return saved === null ? true : saved === 'true'
+  })
 
   useEffect(() => {
     if (!containerRef.current) return
@@ -70,6 +75,18 @@ function TetrisGame() {
           scene.gameOver()
         }
       }
+    }
+
+    const handleAudioToggle = () => {
+      const scene = game.scene.scenes[0]
+      if (!scene) return
+      const newState = scene.toggleAudio()
+      setAudioEnabled(newState)
+    }
+
+    const audioBtn = document.getElementById('audio-toggle-btn')
+    if (audioBtn) {
+      audioBtn.addEventListener('click', handleAudioToggle)
     }
 
     const handleSpeedSliderInput = (e) => {
@@ -140,6 +157,9 @@ function TetrisGame() {
       if (giveUpBtn) {
         giveUpBtn.removeEventListener('click', handleGiveUpClick)
       }
+      if (audioBtn) {
+        audioBtn.removeEventListener('click', handleAudioToggle)
+      }
       if (speedSlider) {
         speedSlider.removeEventListener('input', handleSpeedSliderInput)
       }
@@ -191,6 +211,28 @@ function TetrisGame() {
               <rect x="0"  y="36" width="15" height="5"  rx="3" fill="white" opacity="0.3"/>
             </svg>
           </div>
+
+          {/* 오디오 ON/OFF 토글 버튼 */}
+          <button
+            id="audio-toggle-btn"
+            className={`audio-toggle-btn${audioEnabled ? '' : ' muted'}`}
+            title={audioEnabled ? '오디오 끄기' : '오디오 켜기'}
+            aria-label={audioEnabled ? '오디오 끄기' : '오디오 켜기'}
+          >
+            {audioEnabled ? (
+              <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M11 5L6 9H2v6h4l5 4V5z" fill="currentColor"/>
+                <path d="M15.54 8.46a5 5 0 0 1 0 7.07" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                <path d="M19.07 4.93a10 10 0 0 1 0 14.14" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+              </svg>
+            ) : (
+              <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M11 5L6 9H2v6h4l5 4V5z" fill="currentColor"/>
+                <line x1="23" y1="9" x2="17" y2="15" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                <line x1="17" y1="9" x2="23" y2="15" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+              </svg>
+            )}
+          </button>
         </div>
 
         <div className="game-header">
