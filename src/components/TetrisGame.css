@@ -1,0 +1,505 @@
+/* 테트리스 게임 래퍼 */
+.tetris-game-wrapper {
+  position: relative;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  max-width: 1200px;
+  max-height: 100vh;
+  margin: 0 auto;
+  overflow: hidden;
+}
+
+/* 테트리스 게임 컨테이너 */
+.tetris-game-container {
+  position: relative;
+  width: 800px;
+  max-width: calc(100vw - 40px);
+  max-height: calc(100vh - 40px);
+  border-radius: 24px;
+  overflow: hidden;
+  box-shadow: 
+    0 25px 50px -12px rgba(0, 0, 0, 0.9),
+    0 0 0 2px rgba(0, 245, 255, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.15),
+    0 0 80px rgba(0, 245, 255, 0.3);
+  backdrop-filter: blur(20px);
+  background: rgba(10, 10, 25, 0.95);
+  border: 2px solid rgba(0, 245, 255, 0.3);
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+}
+
+/* 게임 헤더 (HUD + 속도 조절) */
+.game-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 15px 20px;
+  gap: 20px;
+  flex-shrink: 0;
+}
+
+#game-container {
+  position: relative;
+  width: 800px;
+  height: 900px;
+  max-width: 100%;
+  flex: 1 1 auto;
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+#game-container canvas {
+  display: block !important;
+  width: 100% !important;
+  height: 100% !important;
+  max-width: 100% !important;
+  max-height: 100% !important;
+  object-fit: contain;
+}
+
+/* 상단 HUD */
+.game-hud {
+  display: flex;
+  gap: 20px;
+  align-items: center;
+  flex: 1;
+}
+
+.game-hud .hud-panel {
+  pointer-events: auto;
+}
+
+.hud-panel {
+  background: rgba(15, 15, 35, 0.85);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(0, 245, 255, 0.3);
+  border-radius: 12px;
+  padding: 12px 20px;
+  box-shadow: 
+    0 8px 32px rgba(0, 0, 0, 0.5),
+    0 0 20px rgba(0, 245, 255, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  transition: all 0.3s ease;
+  min-width: 100px;
+}
+
+.hud-panel:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+}
+
+.hud-label {
+  font-family: 'Orbitron', monospace;
+  color: #ffffff;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  margin-bottom: 5px;
+  text-align: center;
+  font-weight: 600;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+.hud-value {
+  font-family: 'Orbitron', monospace;
+  color: #ffffff;
+  font-size: 20px;
+  font-weight: 700;
+  text-align: center;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  text-shadow: 
+    0 0 8px rgba(0, 245, 255, 0.4),
+    0 1px 2px rgba(0, 0, 0, 0.8);
+}
+
+/* 속도 조절 UI */
+.speed-control {
+  background: rgba(15, 15, 35, 0.85);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(0, 245, 255, 0.3);
+  border-radius: 12px;
+  padding: 12px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 200px;
+  flex-shrink: 0;
+  box-shadow: 
+    0 8px 32px rgba(0, 0, 0, 0.5),
+    0 0 20px rgba(0, 245, 255, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  pointer-events: auto;
+}
+
+.speed-control-label {
+  font-family: 'Orbitron', monospace;
+  color: #ffffff;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  text-align: center;
+  font-weight: 600;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+.speed-slider-container {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.speed-slider {
+  flex: 1;
+  height: 6px;
+  border-radius: 3px;
+  background: rgba(0, 245, 255, 0.2);
+  outline: none;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.speed-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #00f5ff;
+  cursor: pointer;
+  box-shadow: 0 0 10px #00f5ff;
+  transition: all 0.2s ease;
+}
+
+.speed-slider::-webkit-slider-thumb:hover {
+  transform: scale(1.2);
+  box-shadow: 0 0 15px #00f5ff;
+}
+
+.speed-slider::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #00f5ff;
+  cursor: pointer;
+  border: none;
+  box-shadow: 0 0 10px #00f5ff;
+  transition: all 0.2s ease;
+}
+
+.speed-slider::-moz-range-thumb:hover {
+  transform: scale(1.2);
+  box-shadow: 0 0 15px #00f5ff;
+}
+
+.speed-value {
+  font-family: 'Orbitron', monospace;
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 700;
+  min-width: 70px;
+  text-align: center;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+/* 하단 컨트롤 */
+.game-controls {
+  display: flex;
+  gap: 15px;
+  align-items: center;
+  justify-content: center;
+  padding: 15px 20px;
+  flex-shrink: 0;
+  pointer-events: none;
+}
+
+.game-controls .control-btn {
+  pointer-events: auto;
+}
+
+.control-btn {
+  background: rgba(15, 15, 35, 0.85);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(0, 245, 255, 0.3);
+  border-radius: 16px;
+  padding: 14px 24px;
+  color: #ffffff;
+  font-family: 'Exo 2', sans-serif;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  position: relative;
+  overflow: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+  box-shadow: 
+    0 4px 15px rgba(0, 0, 0, 0.3),
+    0 0 10px rgba(0, 245, 255, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+.control-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.5s;
+}
+
+.control-btn:hover::before {
+  left: 100%;
+}
+
+.control-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 
+    0 8px 25px rgba(0, 0, 0, 0.4),
+    0 0 20px rgba(0, 245, 255, 0.3);
+  border-color: rgba(0, 245, 255, 0.6);
+}
+
+.primary-btn {
+  background: linear-gradient(135deg, rgba(79, 172, 254, 0.8) 0%, rgba(0, 242, 254, 0.8) 100%);
+  box-shadow: 
+    0 4px 15px rgba(79, 172, 254, 0.4),
+    0 0 15px rgba(79, 172, 254, 0.2);
+}
+
+.secondary-btn {
+  background: linear-gradient(135deg, rgba(250, 112, 154, 0.8) 0%, rgba(254, 225, 64, 0.8) 100%);
+  box-shadow: 
+    0 4px 15px rgba(250, 112, 154, 0.4),
+    0 0 15px rgba(250, 112, 154, 0.2);
+}
+
+.danger-btn {
+  background: linear-gradient(135deg, rgba(255, 65, 108, 0.9) 0%, rgba(255, 75, 43, 0.9) 100%);
+  box-shadow: 
+    0 4px 15px rgba(255, 65, 108, 0.5),
+    0 0 15px rgba(255, 65, 108, 0.3);
+  border-color: rgba(255, 65, 108, 0.5);
+}
+
+.danger-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 
+    0 8px 25px rgba(255, 65, 108, 0.6),
+    0 0 25px rgba(255, 65, 108, 0.4);
+  border-color: rgba(255, 65, 108, 0.8);
+  background: linear-gradient(135deg, rgba(255, 84, 120, 0.95) 0%, rgba(255, 92, 61, 0.95) 100%);
+}
+
+/* 조작법 모달 */
+.help-modal {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.8);
+  z-index: 2000;
+  justify-content: center;
+  align-items: center;
+}
+
+.help-modal.show {
+  display: flex;
+}
+
+.help-modal-content {
+  background: #1a1a2e;
+  padding: 30px;
+  border-radius: 20px;
+  max-width: 500px;
+  border: 2px solid #00f5ff;
+}
+
+.help-modal-content h2 {
+  color: #00f5ff;
+  margin-bottom: 20px;
+  font-family: 'Orbitron', monospace;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+.help-content {
+  color: #ffffff;
+  line-height: 2;
+  font-size: 16px;
+  margin-bottom: 20px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+.close-help-btn {
+  margin-top: 20px;
+  padding: 10px 20px;
+  background: #00f5ff;
+  color: #0f0f23;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  font-weight: bold;
+  width: 100%;
+}
+
+.close-help-btn:hover {
+  background: #00d4e6;
+}
+
+/* 반응형 디자인 */
+@media (max-width: 900px) {
+  .tetris-game-wrapper {
+    max-width: 100%;
+    padding: 0 10px;
+  }
+
+  .tetris-game-container {
+    width: 100%;
+    max-width: 800px;
+  }
+
+  #game-container {
+    width: 100%;
+    height: auto;
+    aspect-ratio: 800 / 900;
+  }
+
+  #game-container canvas {
+    width: 100% !important;
+    height: 100% !important;
+    max-width: 100% !important;
+    max-height: 100% !important;
+  }
+
+  .game-header {
+    flex-direction: column;
+    gap: 15px;
+    padding: 15px;
+  }
+
+  .game-hud {
+    width: 100%;
+    justify-content: center;
+    gap: 15px;
+  }
+
+  .speed-control {
+    width: 100%;
+    min-width: auto;
+  }
+
+  .hud-panel {
+    padding: 8px 14px;
+    min-width: 80px;
+  }
+
+  .hud-label {
+    font-size: 9px;
+  }
+
+  .hud-value {
+    font-size: 16px;
+  }
+
+  .game-controls {
+    padding: 15px;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  .control-btn {
+    padding: 10px 16px;
+    font-size: 12px;
+  }
+}
+
+@media (max-width: 768px) {
+  .app {
+    padding: 10px;
+  }
+
+  .tetris-game-container {
+    border-radius: 16px;
+  }
+
+  .game-header {
+    padding: 10px;
+    gap: 10px;
+  }
+
+  .game-hud {
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  
+  .hud-panel {
+    padding: 6px 10px;
+    min-width: 70px;
+  }
+  
+  .hud-label {
+    font-size: 8px;
+  }
+  
+  .hud-value {
+    font-size: 14px;
+  }
+
+  .speed-control {
+    padding: 8px 10px;
+  }
+
+  .speed-control-label {
+    font-size: 10px;
+  }
+
+  .speed-value {
+    font-size: 11px;
+    min-width: 50px;
+  }
+  
+  .game-controls {
+    padding: 10px;
+    gap: 8px;
+  }
+
+  .control-btn {
+    padding: 8px 12px;
+    font-size: 11px;
+  }
+}
+
