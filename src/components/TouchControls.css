@@ -1,0 +1,302 @@
+/* ============================================================
+   TouchControls.css
+   모바일 전용 D-패드 터치 컨트롤 스타일
+   ============================================================ */
+
+/* ── 데스크탑(마우스 주 입력) 에서는 완전히 숨김 ─────────── */
+@media (pointer: fine) {
+  .tc-wrap { display: none !important; }
+}
+
+/* ── 래퍼 ────────────────────────────────────────────────── */
+.tc-wrap {
+  width: 100%;
+  background: linear-gradient(
+    180deg,
+    rgba(5, 5, 18, 0.96) 0%,
+    rgba(8, 8, 24, 0.98) 100%
+  );
+  border-top: 1px solid rgba(0, 245, 255, 0.12);
+  padding: 10px 14px 16px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  /* 터치 기본 동작 차단 (스크롤/줌 방지) */
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  flex-shrink: 0;
+}
+
+/* ── 힌트 바 ─────────────────────────────────────────────── */
+.tc-hint {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding-bottom: 4px;
+}
+
+.tc-hint-text {
+  font-family: 'Exo 2', sans-serif;
+  font-size: 10px;
+  color: rgba(0, 245, 255, 0.3);
+  letter-spacing: 0.8px;
+  text-align: center;
+}
+
+.tc-hint-icon {
+  font-size: 11px;
+  color: rgba(0, 245, 255, 0.25);
+  animation: hint-pulse 2.4s ease-in-out infinite;
+}
+
+.tc-hint-icon:last-child {
+  animation-delay: 1.2s;
+}
+
+@keyframes hint-pulse {
+  0%, 100% { opacity: 0.25; transform: translateX(0); }
+  50%       { opacity: 0.6;  transform: translateX(3px); }
+}
+
+.tc-hint-icon:first-child {
+  animation-name: hint-pulse-left;
+}
+
+@keyframes hint-pulse-left {
+  0%, 100% { opacity: 0.25; transform: translateX(0); }
+  50%       { opacity: 0.6;  transform: translateX(-3px); }
+}
+
+/* ── 패드 (좌 + 구분선 + 우) ─────────────────────────────── */
+.tc-pad {
+  display: flex;
+  align-items: stretch;
+  gap: 10px;
+  height: 116px;
+}
+
+/* ── 좌/우 존 ───────────────────────────────────────────── */
+.tc-zone {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+/* ── 행 (버튼 2개 나란히) ───────────────────────────────── */
+.tc-row {
+  display: flex;
+  gap: 7px;
+  flex: 1;
+}
+
+/* ── 구분선 ─────────────────────────────────────────────── */
+.tc-divider {
+  width: 1px;
+  background: linear-gradient(
+    180deg,
+    transparent 0%,
+    rgba(0, 245, 255, 0.2) 30%,
+    rgba(0, 245, 255, 0.2) 70%,
+    transparent 100%
+  );
+  flex-shrink: 0;
+  align-self: stretch;
+}
+
+/* ── 버튼 공통 ──────────────────────────────────────────── */
+.tc-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  border: none;
+  border-radius: 16px;
+  cursor: pointer;
+  font-family: 'Orbitron', monospace;
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+  color: #ffffff;
+  position: relative;
+  overflow: hidden;
+  /* 터치 반응 */
+  touch-action: none;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  -webkit-user-select: none;
+  transition: transform 0.07s ease, box-shadow 0.07s ease;
+  /* 최소 크기 (손가락 접근성) */
+  min-width: 44px;
+  min-height: 44px;
+  flex: 1;
+}
+
+.tc-btn svg {
+  width: 22px;
+  height: 22px;
+  display: block;
+  flex-shrink: 0;
+  pointer-events: none;
+}
+
+.tc-btn span {
+  font-size: 7.5px;
+  letter-spacing: 0.3px;
+  opacity: 0.75;
+  line-height: 1;
+  pointer-events: none;
+}
+
+/* 버튼 눌림 효과 */
+.tc-btn:active {
+  transform: scale(0.87);
+}
+
+/* 풀폭 버튼 (소프트드롭 / 하드드롭) */
+.tc-wide {
+  flex-direction: row;
+  gap: 8px;
+  flex: none;
+  width: 100%;
+  height: 42px;
+  border-radius: 14px;
+}
+
+/* ── 이동 버튼 (◀ ▶) - 시안 ──────────────────────────────── */
+.tc-move {
+  background: rgba(0, 245, 255, 0.07);
+  border: 1.5px solid rgba(0, 245, 255, 0.28);
+  color: #00f5ff;
+  box-shadow:
+    0 0 12px rgba(0, 245, 255, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+.tc-move:active {
+  background: rgba(0, 245, 255, 0.22);
+  border-color: rgba(0, 245, 255, 0.75);
+  box-shadow: 0 0 22px rgba(0, 245, 255, 0.35);
+  transform: scale(0.87);
+}
+
+/* ── 소프트드롭 (▼) - 시안 연하게 ─────────────────────────── */
+.tc-soft {
+  background: rgba(0, 245, 255, 0.05);
+  border: 1.5px solid rgba(0, 245, 255, 0.18);
+  color: rgba(0, 245, 255, 0.8);
+  box-shadow: none;
+}
+
+.tc-soft:active {
+  background: rgba(0, 245, 255, 0.18);
+  border-color: rgba(0, 245, 255, 0.6);
+  box-shadow: 0 0 16px rgba(0, 245, 255, 0.25);
+  transform: scale(0.93);
+}
+
+/* ── 홀드 (HOLD) - 퍼플 ──────────────────────────────────── */
+.tc-hold {
+  background: rgba(156, 39, 176, 0.10);
+  border: 1.5px solid rgba(186, 104, 200, 0.45);
+  color: #ce93d8;
+  box-shadow:
+    0 0 12px rgba(156, 39, 176, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+.tc-hold:active {
+  background: rgba(156, 39, 176, 0.28);
+  border-color: rgba(206, 147, 216, 0.85);
+  box-shadow: 0 0 22px rgba(156, 39, 176, 0.45);
+  transform: scale(0.87);
+}
+
+/* ── 회전 (ROTATE) - 그린 ────────────────────────────────── */
+.tc-rotate {
+  background: rgba(76, 175, 80, 0.10);
+  border: 1.5px solid rgba(129, 199, 132, 0.45);
+  color: #a5d6a7;
+  box-shadow:
+    0 0 12px rgba(76, 175, 80, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+.tc-rotate:active {
+  background: rgba(76, 175, 80, 0.28);
+  border-color: rgba(165, 214, 167, 0.85);
+  box-shadow: 0 0 22px rgba(76, 175, 80, 0.45);
+  transform: scale(0.87);
+}
+
+/* ── 하드드롭 (HARD DROP) - 오렌지/레드 ─────────────────── */
+.tc-hard {
+  background: rgba(255, 87, 34, 0.10);
+  border: 1.5px solid rgba(255, 138, 101, 0.45);
+  color: #ffab91;
+  box-shadow:
+    0 0 12px rgba(255, 87, 34, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+.tc-hard:active {
+  background: rgba(255, 87, 34, 0.30);
+  border-color: rgba(255, 171, 145, 0.85);
+  box-shadow: 0 0 24px rgba(255, 87, 34, 0.50);
+  transform: scale(0.90);
+}
+
+/* ── 가로 모드 (landscape) 레이아웃 조정 ──────────────────── */
+@media (max-height: 500px) and (orientation: landscape) {
+  .tc-wrap {
+    padding: 6px 20px 10px;
+    gap: 6px;
+  }
+
+  .tc-hint {
+    display: none; /* 가로 모드에서 힌트 숨김 */
+  }
+
+  .tc-pad {
+    height: 90px;
+    gap: 14px;
+  }
+
+  .tc-wide {
+    height: 36px;
+  }
+
+  .tc-btn svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  .tc-btn span {
+    display: none; /* 가로 모드에서 라벨 숨김 */
+  }
+}
+
+/* ── 아주 좁은 화면 (< 360px) ─────────────────────────────── */
+@media (max-width: 360px) {
+  .tc-pad {
+    gap: 6px;
+    height: 108px;
+  }
+
+  .tc-btn {
+    border-radius: 12px;
+  }
+
+  .tc-btn svg {
+    width: 19px;
+    height: 19px;
+  }
+
+  .tc-hint-text {
+    font-size: 9px;
+  }
+}

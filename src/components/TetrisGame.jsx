@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react'
 import Phaser from 'phaser'
 import TetrisScene from '../utils/gameClassesFull'
+import TouchControls from './TouchControls'
 import './TetrisGame.css'
 
 function TetrisGame() {
@@ -12,6 +13,17 @@ function TetrisGame() {
     const saved = localStorage.getItem('tetrisAudioEnabled')
     return saved === null ? true : saved === 'true'
   })
+  // 터치(모바일) 기기 여부 감지
+  const [isTouchDevice, setIsTouchDevice] = useState(false)
+
+  useEffect(() => {
+    // pointer: coarse = 터치 기기 (스마트폰/태블릿)
+    const mq = window.matchMedia('(pointer: coarse)')
+    const update = () => setIsTouchDevice(mq.matches)
+    update()
+    mq.addEventListener('change', update)
+    return () => mq.removeEventListener('change', update)
+  }, [])
 
   useEffect(() => {
     if (!containerRef.current) return
@@ -276,6 +288,9 @@ function TetrisGame() {
         </div>
 
         <div ref={containerRef} id="game-container" />
+
+        {/* 모바일 터치 컨트롤 (pointer:coarse 기기에서만 표시) */}
+        {isTouchDevice && <TouchControls gameRef={gameRef} />}
 
         <div className="game-controls">
           <button className="control-btn primary-btn" id="new-game-btn">

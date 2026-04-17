@@ -1083,6 +1083,7 @@ export default class TetrisScene extends Phaser.Scene {
         const savedAudio = localStorage.getItem('tetrisAudioEnabled');
         this.soundEnabled = savedAudio === null ? true : savedAudio === 'true';
         this.sounds = {};
+        this.touchSoftDropping = false;  // 터치 소프트드롭 hold 상태
         this.gameOverOverlay = null;
         this.gameOverText = null;
         this.gameOverScoreText = null;
@@ -1337,6 +1338,68 @@ export default class TetrisScene extends Phaser.Scene {
         });
         
     }
+
+    // ─── 터치 컨트롤에서 호출하는 공용 액션 디스패처 ────────────────────
+    executeAction(action) {
+        const canInput = () =>
+            this.isRunning && !this.gameState.isPaused && !this.gameState.isLocking;
+
+        switch (action) {
+            case 'left':
+                if (canInput()) {
+                    this.gameState.moveBlock(-1, 0);
+                    this.playSound('move', 0.3);
+                    this.renderer.update();
+                }
+                break;
+            case 'right':
+                if (canInput()) {
+                    this.gameState.moveBlock(1, 0);
+                    this.playSound('move', 0.3);
+                    this.renderer.update();
+                }
+                break;
+            case 'rotate':
+                if (canInput()) {
+                    this.gameState.rotateBlock();
+                    this.playSound('rotate', 0.4);
+                    this.renderer.update();
+                }
+                break;
+            case 'softDrop':
+                if (canInput()) {
+                    this.gameState.softDrop(false);
+                    this.renderer.update();
+                }
+                break;
+            case 'hardDrop':
+                if (canInput()) {
+                    this.gameState.hardDrop();
+                    this.playSound('drop', 0.6);
+                    this.renderer.update();
+                }
+                break;
+            case 'hold':
+                if (canInput()) {
+                    this.gameState.hold();
+                    this.playSound('hold', 0.4);
+                    this.renderer.update();
+                }
+                break;
+            case 'pause':
+                if (this.isRunning && !this.gameState.isGameOver) {
+                    this.gameState.isPaused = !this.gameState.isPaused;
+                    if (this.gameState.isPaused) {
+                        this.showPauseScreen();
+                    } else {
+                        this.hidePauseScreen();
+                    }
+                }
+                break;
+            default:
+                break;
+        }
+    }
     
     update(time, delta) {
         if (!this.isRunning || this.gameState.isPaused) return;
@@ -1344,8 +1407,10 @@ export default class TetrisScene extends Phaser.Scene {
         // 라인 클리어 중에는 소프트 드롭 무시
         const canDrop = !this.gameState.isLocking;
         
-        // 소프트 드롭 키를 누르고 있을 때 (점수 없이 빠른 낙하)
-        const isSoftDropping = canDrop && this.cursors && this.cursors.down.isDown;
+        // 소프트 드롭: 키보드(↓) OR 터치 소프트드롭 버튼 hold
+        const isSoftDropping = canDrop && (
+            (this.cursors && this.cursors.down.isDown) || this.touchSoftDropping
+        );
         
         if (isSoftDropping) {
             if (!this.softDropTimer || time >= this.softDropTimer) {

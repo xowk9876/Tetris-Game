@@ -640,6 +640,131 @@
   }
 }
 
+/* ── 터치 기기 (모바일/태블릿) 전용 레이아웃 ───────────── */
+@media (pointer: coarse) {
+  /* 앱 여백 최소화 */
+  .app {
+    padding: 4px;
+    align-items: flex-start;
+  }
+
+  .tetris-game-wrapper {
+    padding: 0;
+    height: 100%;
+    max-height: 100dvh; /* dynamic viewport height */
+    justify-content: flex-start;
+  }
+
+  .tetris-game-container {
+    border-radius: 0;
+    border-left: none;
+    border-right: none;
+    box-shadow: none;
+    height: 100%;
+    max-height: 100dvh;
+    overflow-y: auto;
+    overflow-x: hidden;
+  }
+
+  /* 로고 바 컴팩트 */
+  .game-logo-bar {
+    padding: 8px 14px;
+    gap: 10px;
+  }
+
+  .logo-text-main {
+    font-size: 20px;
+    letter-spacing: 4px;
+  }
+
+  .logo-text-sub {
+    font-size: 9px;
+  }
+
+  .game-logo-icon svg {
+    width: 32px;
+    height: 20px;
+  }
+
+  .logo-icon-right svg {
+    width: 18px;
+    height: 28px;
+  }
+
+  /* HUD 컴팩트 (한 줄 + 더 작게) */
+  .game-header {
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 6px;
+    padding: 8px 10px;
+    align-items: center;
+  }
+
+  .game-hud {
+    flex: 1;
+    gap: 6px;
+    flex-wrap: nowrap;
+    justify-content: flex-start;
+  }
+
+  .hud-panel {
+    padding: 6px 10px;
+    min-width: 0;
+    flex: 1;
+  }
+
+  .hud-label {
+    font-size: 8px;
+    letter-spacing: 1px;
+    margin-bottom: 2px;
+  }
+
+  .hud-value {
+    font-size: 13px;
+  }
+
+  /* 속도 슬라이더: 모바일에서 컴팩트 */
+  .speed-control {
+    min-width: 0;
+    flex: 0 0 auto;
+    width: auto;
+    padding: 6px 10px;
+  }
+
+  .speed-control-label {
+    font-size: 9px;
+  }
+
+  .speed-value {
+    font-size: 10px;
+    min-width: 42px;
+  }
+
+  /* 게임 캔버스: 남은 공간 채우기 */
+  #game-container {
+    flex: 1 1 0;
+    min-height: 0;
+    height: auto;
+    aspect-ratio: auto;
+  }
+
+  /* 하단 버튼: 더 작게 */
+  .game-controls {
+    padding: 8px 10px;
+    gap: 6px;
+    flex-wrap: nowrap;
+    justify-content: center;
+  }
+
+  .control-btn {
+    padding: 8px 12px;
+    font-size: 11px;
+    border-radius: 12px;
+    flex: 1;
+    max-width: 120px;
+  }
+}
+
 @media (max-width: 768px) {
   .app {
     padding: 10px;
