@@ -539,109 +539,130 @@
 
 /* ── 터치 기기 (모바일/태블릿) 전용 레이아웃 ───────────── */
 @media (pointer: coarse) {
-  /* 앱 여백 최소화 */
+  /* 앱 여백 제거 — 전체 화면 사용 */
   .app {
-    padding: 4px;
-    align-items: flex-start;
+    padding: 0;
+    align-items: stretch;
   }
 
   .tetris-game-wrapper {
     padding: 0;
-    height: 100%;
-    max-height: 100dvh; /* dynamic viewport height */
+    width: 100%;
+    height: 100dvh;
+    max-height: 100dvh;
     justify-content: flex-start;
+    overflow: hidden;
   }
 
   .tetris-game-container {
     border-radius: 0;
-    border-left: none;
-    border-right: none;
+    border: none;
     box-shadow: none;
-    height: 100%;
+    width: 100%;
+    height: 100dvh;
     max-height: 100dvh;
-    overflow-y: auto;
-    overflow-x: hidden;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
   }
 
-  /* 로고 바 컴팩트 */
+  /* 로고 바: 초컴팩트 */
   .game-logo-bar {
-    padding: 8px 14px;
-    gap: 10px;
+    padding: 5px 12px;
+    gap: 8px;
+    flex-shrink: 0;
   }
 
   .logo-text-main {
-    font-size: 20px;
-    letter-spacing: 4px;
+    font-size: 17px;
+    letter-spacing: 3px;
   }
 
   .logo-text-sub {
-    font-size: 9px;
+    font-size: 8px;
+    letter-spacing: 2px;
   }
 
   .game-logo-icon svg {
-    width: 32px;
-    height: 20px;
+    width: 26px;
+    height: 17px;
   }
 
   .logo-icon-right svg {
-    width: 18px;
-    height: 28px;
+    width: 15px;
+    height: 24px;
   }
 
-  /* HUD 컴팩트 (한 줄 + 더 작게) */
+  .audio-toggle-btn {
+    width: 30px;
+    height: 30px;
+    right: 10px;
+  }
+
+  .audio-toggle-btn svg {
+    width: 14px;
+    height: 14px;
+  }
+
+  /* HUD: 한 줄, 최소 높이 */
   .game-header {
     flex-direction: row;
-    flex-wrap: wrap;
-    gap: 6px;
-    padding: 8px 10px;
+    flex-wrap: nowrap;
+    gap: 4px;
+    padding: 4px 8px;
     align-items: center;
+    flex-shrink: 0;
   }
 
   .game-hud {
     flex: 1;
-    gap: 6px;
+    gap: 4px;
     flex-wrap: nowrap;
-    justify-content: flex-start;
+    justify-content: space-between;
   }
 
   .hud-panel {
-    padding: 6px 10px;
+    padding: 4px 6px;
     min-width: 0;
     flex: 1;
+    border-radius: 8px;
   }
 
   .hud-label {
-    font-size: 8px;
-    letter-spacing: 1px;
-    margin-bottom: 2px;
+    font-size: 7px;
+    letter-spacing: 0.5px;
+    margin-bottom: 1px;
   }
 
   .hud-value {
-    font-size: 13px;
+    font-size: 12px;
   }
 
-  /* 게임 캔버스: 남은 공간 채우기 */
+  /* 게임 캔버스: 남은 공간을 모두 차지 */
   #game-container {
     flex: 1 1 0;
     min-height: 0;
-    height: auto;
+    height: 0;
+    width: 100%;
     aspect-ratio: auto;
   }
 
-  /* 하단 버튼: 더 작게 */
+  /* 하단 게임 컨트롤 버튼 (New/Pause/Reset): 초컴팩트 */
   .game-controls {
-    padding: 8px 10px;
-    gap: 6px;
+    padding: 4px 8px;
+    gap: 5px;
     flex-wrap: nowrap;
     justify-content: center;
+    flex-shrink: 0;
   }
 
   .control-btn {
-    padding: 8px 12px;
-    font-size: 11px;
-    border-radius: 12px;
+    padding: 6px 10px;
+    font-size: 10px;
+    border-radius: 10px;
     flex: 1;
-    max-width: 120px;
+    max-width: 100px;
+    min-height: 32px;
   }
 }
 
