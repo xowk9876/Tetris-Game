@@ -43,6 +43,7 @@ export class Board {
         this.width = width;
         this.height = height;
         this.grid = this.createEmptyGrid();
+        this.version = 0; // 변경 추적 카운터 (JSON.stringify 대체)
     }
     
     createEmptyGrid() {
@@ -51,6 +52,7 @@ export class Board {
 
     reset() {
         this.grid = this.createEmptyGrid();
+        this.version++;
     }
     
     isValidPosition(block, x, y) {
@@ -95,6 +97,7 @@ export class Board {
                 }
             }
         }
+        this.version++; // 보드 변경 카운터 증가
     }
     
     clearLines() {
@@ -115,6 +118,10 @@ export class Board {
             this.grid.splice(lineIndex, 1);
             this.grid.unshift(Array(this.width).fill(0));
         });
+        
+        if (linesToClear.length > 0) {
+            this.version++; // 보드 변경 카운터 증가
+        }
         
         return { count: linesToClear.length, rows: linesToClear };
     }
@@ -480,13 +487,16 @@ export class TetrisRenderer {
         this.boardBackgroundDrawn = false;
         this.boardBackground = null;
         this.gridLines = null;
+        
+        // 버전 기반 변경 감지 (JSON.stringify 대신 O(1) 비교)
+        this.lastBoardVersion = -1;
     }
     
-    // 보드 상태 변경 감지
+    // 보드 상태 변경 감지 (O(1) - version counter 사용)
     isBoardChanged() {
-        const currentState = JSON.stringify(this.gameState.board.grid);
-        if (this.lastBoardState !== currentState) {
-            this.lastBoardState = currentState;
+        const currentVersion = this.gameState.board.version;
+        if (this.lastBoardVersion !== currentVersion) {
+            this.lastBoardVersion = currentVersion;
             return true;
         }
         return false;
@@ -1053,7 +1063,7 @@ export class TetrisRenderer {
     // 보드 다시 그리기 강제
     markBoardDirty() {
         this.boardDirty = true;
-        this.lastBoardState = null;
+        this.lastBoardVersion = -1;
     }
     
     update() {
@@ -1331,18 +1341,22 @@ export default class TetrisScene extends Phaser.Scene {
     }
 
     updateHUD() {
-        document.getElementById('lines-count').textContent = 
-            this.gameState.lines;
-        document.getElementById('current-score').textContent = 
-            this.gameState.score.toLocaleString();
-        document.getElementById('combo-count').textContent = 
-            this.gameState.combo;
-        
-        // 최고 점수 저장 (표시는 하지 않음)
-        const bestScore = parseInt(localStorage.getItem('tetrisBestScore') || '0');
-        if (this.gameState.score > bestScore) {
+        const linesEl = document.getElementById('lines-count');
+        const scoreEl = document.getElementById('current-score');
+        const comboEl = document.getElementById('combo-count');
+        const bestEl = document.getElementById('best-score');
+
+        if (linesEl) linesEl.textContent = this.gameState.lines;
+        if (scoreEl) scoreEl.textContent = this.gameState.score.toLocaleString();
+        if (comboEl) comboEl.textContent = this.gameState.combo;
+
+        // 최고 점수 저장 및 표시
+        const savedBest = parseInt(localStorage.getItem('tetrisBestScore') || '0');
+        const currentBest = Math.max(this.gameState.score, savedBest);
+        if (this.gameState.score > savedBest) {
             localStorage.setItem('tetrisBestScore', this.gameState.score.toString());
         }
+        if (bestEl) bestEl.textContent = currentBest.toLocaleString();
     }
     
     showPauseScreen() {

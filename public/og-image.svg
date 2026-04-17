@@ -1,0 +1,106 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#000011"/>
+      <stop offset="50%" stop-color="#0f0f23"/>
+      <stop offset="100%" stop-color="#000011"/>
+    </linearGradient>
+    <radialGradient id="glow1" cx="20%" cy="30%" r="40%">
+      <stop offset="0%" stop-color="#00f5ff" stop-opacity="0.15"/>
+      <stop offset="100%" stop-color="transparent"/>
+    </radialGradient>
+    <radialGradient id="glow2" cx="80%" cy="70%" r="40%">
+      <stop offset="0%" stop-color="#ff6b9d" stop-opacity="0.12"/>
+      <stop offset="100%" stop-color="transparent"/>
+    </radialGradient>
+    <filter id="shadow">
+      <feDropShadow dx="0" dy="0" stdDeviation="8" flood-color="#00f5ff" flood-opacity="0.6"/>
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  <rect width="1200" height="630" fill="url(#glow1)"/>
+  <rect width="1200" height="630" fill="url(#glow2)"/>
+
+  <!-- Grid lines -->
+  <g stroke="#00f5ff" stroke-width="0.5" opacity="0.06">
+    <line x1="0" y1="80" x2="1200" y2="80"/>
+    <line x1="0" y1="160" x2="1200" y2="160"/>
+    <line x1="0" y1="240" x2="1200" y2="240"/>
+    <line x1="0" y1="320" x2="1200" y2="320"/>
+    <line x1="0" y1="400" x2="1200" y2="400"/>
+    <line x1="0" y1="480" x2="1200" y2="480"/>
+    <line x1="0" y1="560" x2="1200" y2="560"/>
+    <line x1="80" y1="0" x2="80" y2="630"/>
+    <line x1="160" y1="0" x2="160" y2="630"/>
+    <line x1="240" y1="0" x2="240" y2="630"/>
+    <line x1="320" y1="0" x2="320" y2="630"/>
+    <line x1="400" y1="0" x2="400" y2="630"/>
+    <line x1="480" y1="0" x2="480" y2="630"/>
+    <line x1="560" y1="0" x2="560" y2="630"/>
+    <line x1="640" y1="0" x2="640" y2="630"/>
+    <line x1="720" y1="0" x2="720" y2="630"/>
+    <line x1="800" y1="0" x2="800" y2="630"/>
+    <line x1="880" y1="0" x2="880" y2="630"/>
+    <line x1="960" y1="0" x2="960" y2="630"/>
+    <line x1="1040" y1="0" x2="1040" y2="630"/>
+    <line x1="1120" y1="0" x2="1120" y2="630"/>
+  </g>
+
+  <!-- Decorative tetromino blocks (left side) -->
+  <!-- I-piece (cyan) -->
+  <rect x="60" y="200" width="55" height="55" rx="6" fill="#00acc1" filter="url(#shadow)"/>
+  <rect x="60" y="200" width="55" height="18" rx="6" fill="white" opacity="0.25"/>
+  <rect x="120" y="200" width="55" height="55" rx="6" fill="#00acc1"/>
+  <rect x="120" y="200" width="55" height="18" rx="6" fill="white" opacity="0.25"/>
+  <rect x="180" y="200" width="55" height="55" rx="6" fill="#00acc1"/>
+  <rect x="180" y="200" width="55" height="18" rx="6" fill="white" opacity="0.25"/>
+  <rect x="240" y="200" width="55" height="55" rx="6" fill="#00acc1"/>
+  <rect x="240" y="200" width="55" height="18" rx="6" fill="white" opacity="0.25"/>
+
+  <!-- T-piece (pink, decorative right) -->
+  <rect x="900" y="150" width="55" height="55" rx="6" fill="#ec407a" opacity="0.8"/>
+  <rect x="960" y="150" width="55" height="55" rx="6" fill="#ec407a" opacity="0.8"/>
+  <rect x="1020" y="150" width="55" height="55" rx="6" fill="#ec407a" opacity="0.8"/>
+  <rect x="960" y="210" width="55" height="55" rx="6" fill="#ec407a" opacity="0.8"/>
+
+  <!-- S-piece (green, bottom right) -->
+  <rect x="960" y="420" width="55" height="55" rx="6" fill="#4caf50" opacity="0.6"/>
+  <rect x="1020" y="420" width="55" height="55" rx="6" fill="#4caf50" opacity="0.6"/>
+  <rect x="900" y="480" width="55" height="55" rx="6" fill="#4caf50" opacity="0.6"/>
+  <rect x="960" y="480" width="55" height="55" rx="6" fill="#4caf50" opacity="0.6"/>
+
+  <!-- Main logo block icon (center-left) -->
+  <g transform="translate(430, 160)" filter="url(#shadow)">
+    <!-- T-piece logo -->
+    <rect x="0" y="0" width="50" height="50" rx="6" fill="#00f5ff"/>
+    <rect x="55" y="0" width="50" height="50" rx="6" fill="#00f5ff"/>
+    <rect x="110" y="0" width="50" height="50" rx="6" fill="#00f5ff"/>
+    <rect x="55" y="55" width="50" height="50" rx="6" fill="#00f5ff"/>
+    <!-- Highlights -->
+    <rect x="0" y="0" width="50" height="16" rx="6" fill="white" opacity="0.3"/>
+    <rect x="55" y="0" width="50" height="16" rx="6" fill="white" opacity="0.3"/>
+    <rect x="110" y="0" width="50" height="16" rx="6" fill="white" opacity="0.3"/>
+    <rect x="55" y="55" width="50" height="16" rx="6" fill="white" opacity="0.3"/>
+  </g>
+
+  <!-- Title Text -->
+  <text x="600" y="320" font-family="Arial Black, Arial, sans-serif" font-size="96" font-weight="900"
+        text-anchor="middle" fill="#00f5ff" filter="url(#shadow)" letter-spacing="8">TETRIS</text>
+  <text x="600" y="370" font-family="Arial, sans-serif" font-size="28" font-weight="400"
+        text-anchor="middle" fill="white" opacity="0.7" letter-spacing="4">테트리스 · 무료 온라인 게임</text>
+
+  <!-- Border frame -->
+  <rect x="2" y="2" width="1196" height="626" rx="12" fill="none" stroke="#00f5ff" stroke-width="2" opacity="0.3"/>
+
+  <!-- Features row -->
+  <text x="600" y="460" font-family="Arial, sans-serif" font-size="22" text-anchor="middle" fill="#00f5ff" opacity="0.9">
+    🎮 홀드  ·  👻 고스트  ·  🔥 콤보  ·  ⚡ 속도 조절  ·  🏆 최고 점수
+  </text>
+
+  <!-- URL -->
+  <text x="600" y="530" font-family="Arial, sans-serif" font-size="20" text-anchor="middle" fill="white" opacity="0.4">
+    tetrisgame-fawn.vercel.app
+  </text>
+</svg>

@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <!-- Background -->
+  <rect width="32" height="32" rx="6" fill="#0a0a1a"/>
+  <!-- T-piece: 3 blocks on top row -->
+  <rect x="2" y="6" width="8" height="8" rx="2" fill="#00f5ff"/>
+  <rect x="12" y="6" width="8" height="8" rx="2" fill="#00f5ff"/>
+  <rect x="22" y="6" width="8" height="8" rx="2" fill="#00f5ff"/>
+  <!-- T-piece: 1 block center bottom -->
+  <rect x="12" y="16" width="8" height="8" rx="2" fill="#00f5ff"/>
+  <!-- Highlights -->
+  <rect x="2" y="6" width="8" height="3" rx="2" fill="white" opacity="0.35"/>
+  <rect x="12" y="6" width="8" height="3" rx="2" fill="white" opacity="0.35"/>
+  <rect x="22" y="6" width="8" height="3" rx="2" fill="white" opacity="0.35"/>
+  <rect x="12" y="16" width="8" height="3" rx="2" fill="white" opacity="0.35"/>
+  <!-- Glow overlay -->
+  <rect width="32" height="32" rx="6" fill="url(#glow)" opacity="0.15"/>
+  <defs>
+    <radialGradient id="glow" cx="50%" cy="50%" r="60%">
+      <stop offset="0%" stop-color="#00f5ff"/>
+      <stop offset="100%" stop-color="transparent"/>
+    </radialGradient>
+  </defs>
+</svg>

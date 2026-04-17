@@ -1,0 +1,35 @@
+{
+  "name": "테트리스 - Tetris Game",
+  "short_name": "Tetris",
+  "description": "클래식 테트리스를 무료로 즐기세요! 7-Bag 시스템, 홀드, 콤보, 고스트 피스를 갖춘 현대적인 테트리스 게임입니다.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#000011",
+  "theme_color": "#00f5ff",
+  "orientation": "portrait-primary",
+  "lang": "ko",
+  "categories": ["games", "entertainment"],
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/og-image.svg",
+      "type": "image/svg+xml",
+      "sizes": "1200x630",
+      "form_factor": "wide"
+    }
+  ]
+}

@@ -160,6 +160,39 @@ function TetrisGame() {
   return (
     <div className="tetris-game-wrapper">
       <div className="tetris-game-container">
+
+        {/* 게임 로고 배너 */}
+        <div className="game-logo-bar">
+          <div className="game-logo-icon" aria-hidden="true">
+            <svg viewBox="0 0 52 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <rect x="0"  y="0" width="15" height="15" rx="3" fill="#00f5ff"/>
+              <rect x="0"  y="0" width="15" height="5"  rx="3" fill="white" opacity="0.3"/>
+              <rect x="18" y="0" width="15" height="15" rx="3" fill="#00f5ff"/>
+              <rect x="18" y="0" width="15" height="5"  rx="3" fill="white" opacity="0.3"/>
+              <rect x="36" y="0" width="15" height="15" rx="3" fill="#00f5ff"/>
+              <rect x="36" y="0" width="15" height="5"  rx="3" fill="white" opacity="0.3"/>
+              <rect x="18" y="17" width="15" height="15" rx="3" fill="#00f5ff"/>
+              <rect x="18" y="17" width="15" height="5"  rx="3" fill="white" opacity="0.3"/>
+            </svg>
+          </div>
+          <h1 className="game-logo-title">
+            <span className="logo-text-main">TETRIS</span>
+            <span className="logo-text-sub">테트리스</span>
+          </h1>
+          <div className="game-logo-icon logo-icon-right" aria-hidden="true">
+            <svg viewBox="0 0 34 52" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <rect x="0"  y="0"  width="15" height="15" rx="3" fill="#ff6b9d"/>
+              <rect x="0"  y="0"  width="15" height="5"  rx="3" fill="white" opacity="0.3"/>
+              <rect x="0"  y="18" width="15" height="15" rx="3" fill="#ff6b9d"/>
+              <rect x="0"  y="18" width="15" height="5"  rx="3" fill="white" opacity="0.3"/>
+              <rect x="18" y="18" width="15" height="15" rx="3" fill="#ff6b9d"/>
+              <rect x="18" y="18" width="15" height="5"  rx="3" fill="white" opacity="0.3"/>
+              <rect x="0"  y="36" width="15" height="15" rx="3" fill="#ff6b9d"/>
+              <rect x="0"  y="36" width="15" height="5"  rx="3" fill="white" opacity="0.3"/>
+            </svg>
+          </div>
+        </div>
+
         <div className="game-header">
           <div className="game-hud">
             <div className="hud-panel">
@@ -175,6 +208,11 @@ function TetrisGame() {
             <div className="hud-panel">
               <div className="hud-label">콤보</div>
               <div className="hud-value" id="combo-count">0</div>
+            </div>
+
+            <div className="hud-panel hud-panel-best">
+              <div className="hud-label">최고 점수</div>
+              <div className="hud-value hud-value-best" id="best-score">0</div>
             </div>
           </div>
 
@@ -229,4 +267,3 @@ function TetrisGame() {
 }
 
 export default TetrisGame
-
