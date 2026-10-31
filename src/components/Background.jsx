@@ -13,8 +13,10 @@ function Background() {
     if (!container || !canvas) return
 
     const ctx = canvas.getContext('2d', { alpha: false }) // 알파 비활성화로 성능 향상
-    canvas.width = window.innerWidth
-    canvas.height = window.innerHeight
+    if (!ctx) return
+    const motion = window.matchMedia('(prefers-reduced-motion: reduce)')
+    canvas.width = Math.max(1, window.innerWidth)
+    canvas.height = Math.max(1, window.innerHeight)
 
     // 프레임 스킵을 위한 변수
     let frameCount = 0
@@ -195,10 +197,11 @@ function Background() {
     let time = 0
 
     const animate = () => {
+      if (document.hidden) return
       frameCount++
       
       // 프레임 스킵: 매 3프레임마다 한 번씩만 업데이트
-      const shouldUpdate = frameCount % (SKIP_FRAMES + 1) === 0
+      const shouldUpdate = motion.matches || frameCount % (SKIP_FRAMES + 1) === 0
       
       if (shouldUpdate) {
         time += 0.02
@@ -234,12 +237,12 @@ function Background() {
         container.style.setProperty('--grid-offset-y', `${Math.cos(time * 0.5) * 15}px`)
       }
 
-      animationFrameRef.current = requestAnimationFrame(animate)
+      if (!motion.matches) animationFrameRef.current = requestAnimationFrame(animate)
     }
 
     const handleResize = () => {
-      const newWidth = window.innerWidth
-      const newHeight = window.innerHeight
+      const newWidth = Math.max(1, window.innerWidth)
+      const newHeight = Math.max(1, window.innerHeight)
       const widthRatio = newWidth / canvas.width
       const heightRatio = newHeight / canvas.height
       
@@ -262,11 +265,21 @@ function Background() {
       })
     }
 
-    window.addEventListener('resize', handleResize)
-    animate()
+    const restart = () => {
+      cancelAnimationFrame(animationFrameRef.current)
+      frameCount = SKIP_FRAMES
+      animate()
+    }
+    const resize = () => { handleResize(); restart() }
+    window.addEventListener('resize', resize)
+    document.addEventListener('visibilitychange', restart)
+    motion.addEventListener('change', restart)
+    restart()
 
     return () => {
-      window.removeEventListener('resize', handleResize)
+      window.removeEventListener('resize', resize)
+      document.removeEventListener('visibilitychange', restart)
+      motion.removeEventListener('change', restart)
       if (animationFrameRef.current) {
         cancelAnimationFrame(animationFrameRef.current)
       }
@@ -274,7 +287,7 @@ function Background() {
   }, [])
 
   return (
-    <div ref={containerRef} className="background-container">
+    <div ref={containerRef} className="background-container" aria-hidden="true">
       <canvas ref={canvasRef} className="background-canvas" />
       <div className="background-3d-base" />
       <div className="background-3d-grid" />

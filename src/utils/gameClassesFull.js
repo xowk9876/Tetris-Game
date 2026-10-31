@@ -1,467 +1,7 @@
-// ============================================
-// 테트리스 게임 - 기획서 기반 구현
-// Phaser 3 + 모던 UI/UX
-// ============================================
-
-import { CONFIG, TETROMINO_COLORS, TETROMINO_SHAPES, SRS_OFFSETS } from './gameConfig'
-import Phaser from 'phaser'
-
-// 게임 상수는 gameConfig.js에서 import됨
-
-// 7-Bag 블록 생성 시스템
-export class BlockBag {
-    constructor() {
-        this.bag = [];
-        this.refillBag();
-    }
-    
-    refillBag() {
-        // 7가지 블록을 섞어서 가방에 넣기
-        const blocks = ['I', 'O', 'T', 'L', 'J', 'S', 'Z'];
-        const shuffled = [...blocks].sort(() => Math.random() - 0.5);
-        this.bag.push(...shuffled);
-    }
-    
-    getNext() {
-        if (this.bag.length === 0) {
-            this.refillBag();
-        }
-        return this.bag.shift();
-    }
-    
-    peek(count = 1) {
-        while (this.bag.length < count) {
-            this.refillBag();
-        }
-        return this.bag.slice(0, count);
-    }
-}
-
-// 게임 보드 클래스
-export class Board {
-    constructor(width, height) {
-        this.width = width;
-        this.height = height;
-        this.grid = this.createEmptyGrid();
-        this.version = 0; // 변경 추적 카운터 (JSON.stringify 대체)
-    }
-    
-    createEmptyGrid() {
-        return Array(this.height).fill(null).map(() => Array(this.width).fill(0));
-    }
-
-    reset() {
-        this.grid = this.createEmptyGrid();
-        this.version++;
-    }
-    
-    isValidPosition(block, x, y) {
-        const shape = block.getShape();
-        
-        for (let row = 0; row < shape.length; row++) {
-            for (let col = 0; col < shape[row].length; col++) {
-                if (shape[row][col] === 1) {
-                    const boardRow = y + row;
-                    const boardCol = x + col;
-                    
-                    // 경계 체크
-                    if (boardRow < 0 || boardRow >= this.height || 
-                        boardCol < 0 || boardCol >= this.width) {
-                        return false;
-                    }
-                    
-                    // 기존 블록과 충돌 체크
-                    if (this.grid[boardRow][boardCol] !== 0) {
-                        return false;
-                    }
-                }
-            }
-        }
-        return true;
-    }
-    
-    placeBlock(block, x, y) {
-        const shape = block.getShape();
-        const color = block.color;
-        
-        for (let row = 0; row < shape.length; row++) {
-            for (let col = 0; col < shape[row].length; col++) {
-                if (shape[row][col] === 1) {
-                    const boardRow = y + row;
-                    const boardCol = x + col;
-                    
-                    if (boardRow >= 0 && boardRow < this.height && 
-                        boardCol >= 0 && boardCol < this.width) {
-                        this.grid[boardRow][boardCol] = color;
-                    }
-                }
-            }
-        }
-        this.version++; // 보드 변경 카운터 증가
-    }
-    
-    clearLines() {
-        const linesToClear = [];
-        
-        // 완성된 줄 찾기 (위에서 아래로)
-        for (let row = 0; row < this.height; row++) {
-            if (this.grid[row].every(cell => cell !== 0)) {
-                linesToClear.push(row);
-            }
-        }
-        
-        // 줄 제거 및 위 블록 내리기 (아래에서 위로 제거하여 인덱스 문제 방지)
-        // 내림차순 정렬하여 아래 줄부터 제거
-        linesToClear.sort((a, b) => b - a);
-        
-        linesToClear.forEach(lineIndex => {
-            this.grid.splice(lineIndex, 1);
-            this.grid.unshift(Array(this.width).fill(0));
-        });
-        
-        if (linesToClear.length > 0) {
-            this.version++; // 보드 변경 카운터 증가
-        }
-        
-        return { count: linesToClear.length, rows: linesToClear };
-    }
-    
-    getLinesToClear() {
-        const linesToClear = [];
-        
-        // 완성된 줄 찾기 (위에서 아래로 - clearLines와 동일한 순서)
-        for (let row = 0; row < this.height; row++) {
-            if (this.grid[row].every(cell => cell !== 0)) {
-                linesToClear.push(row);
-            }
-        }
-        
-        return { count: linesToClear.length, rows: linesToClear };
-    }
-    
-    getGhostY(block, x, y) {
-        let ghostY = y;
-        while (this.isValidPosition(block, x, ghostY + 1)) {
-            ghostY++;
-        }
-        return ghostY;
-    }
-}
-
-// 테트로미노 블록 클래스
-export class Tetromino {
-    constructor(type, bag) {
-        this.type = type;
-        this.color = TETROMINO_COLORS[type].base; // 기본 색상 사용
-        this.colorObj = TETROMINO_COLORS[type]; // 전체 색상 객체 저장
-        this.rotation = 0;
-        this.x = Math.floor(CONFIG.BOARD_WIDTH / 2) - 1;
-        this.y = 0;
-        this.shapes = TETROMINO_SHAPES[type];
-    }
-    
-    getShape() {
-        return this.shapes[this.rotation];
-    }
-    
-    rotate() {
-        const oldRotation = this.rotation;
-        this.rotation = (this.rotation + 1) % 4;
-        return oldRotation;
-    }
-    
-    rotateBack() {
-        this.rotation = (this.rotation + 3) % 4;
-    }
-    
-    move(dx, dy) {
-        this.x += dx;
-        this.y += dy;
-    }
-    
-    resetPosition() {
-        this.x = Math.floor(CONFIG.BOARD_WIDTH / 2) - 1;
-        this.y = 0;
-        this.rotation = 0;
-    }
-    
-    copy() {
-        const copy = new Tetromino(this.type, null);
-        copy.x = this.x;
-        copy.y = this.y;
-        copy.rotation = this.rotation;
-        return copy;
-    }
-}
-
-// 게임 상태 관리 클래스
-export class GameState {
-    constructor() {
-        this.reset();
-    }
-    
-    reset() {
-        this.board = new Board(CONFIG.BOARD_WIDTH, CONFIG.BOARD_HEIGHT);
-        this.blockBag = new BlockBag();
-        this.currentBlock = null;
-        this.nextBlock = null;
-        this.holdBlock = null;
-        this.canHold = true;
-        
-        this.score = 0;
-        this.lines = 0;
-        this.combo = 0;
-        this.maxCombo = 0;
-        this.backToBack = false;
-        
-        this.isGameOver = false;
-        this.isPaused = false;
-        this.isLocking = false; // 블록 고정 중 플래그 (라인 클리어 애니메이션 중)
-        
-        this.fallTimer = 0;
-        // 저장된 속도 불러오기 (없으면 기본값)
-        const savedSpeed = parseInt(localStorage.getItem('tetrisFallSpeed') || CONFIG.BASE_FALL_SPEED.toString());
-        this.fallSpeed = CONFIG.BASE_FALL_SPEED; // 항상 보통(800ms) 고정
-        
-        this.spawnNextBlock();
-    }
-    
-    spawnNextBlock() {
-        if (this.nextBlock) {
-            this.currentBlock = this.nextBlock;
-        } else {
-            const type = this.blockBag.getNext();
-            this.currentBlock = new Tetromino(type, this.blockBag);
-        }
-        
-        this.currentBlock.resetPosition();
-        
-        // 다음 블록 생성
-        const nextType = this.blockBag.getNext();
-        this.nextBlock = new Tetromino(nextType, this.blockBag);
-        
-        // 게임 오버 체크
-        if (!this.board.isValidPosition(this.currentBlock, this.currentBlock.x, this.currentBlock.y)) {
-            this.isGameOver = true;
-        }
-        
-        this.canHold = true;
-    }
-    
-    lockBlock() {
-        // 이미 고정 중이면 중복 호출 방지
-        if (this.isLocking) {
-            return;
-        }
-        
-        this.board.placeBlock(this.currentBlock, this.currentBlock.x, this.currentBlock.y);
-        
-        // 블록 고정 사운드
-        if (this.scene) {
-            this.scene.playSound('drop', 0.4);
-        }
-        
-        // 줄 제거 체크 (제거될 줄 정보 가져오기)
-        const clearResult = this.board.getLinesToClear();
-        if (clearResult.count > 0) {
-            // 라인 클리어 중에는 게임 진행 멈춤
-            this.isLocking = true;
-            
-            // 줄 제거 애니메이션 효과 표시 (콤보 정보도 전달)
-            if (this.scene && this.scene.renderer) {
-                this.scene.renderer.showLineClearEffect(clearResult.rows, clearResult.count, this.combo + 1);
-            }
-            
-            // 셀 애니메이션이 완료된 후 줄 제거
-            this.scene.time.delayedCall(300, () => {
-                // 제거 중인 줄 표시 해제
-                if (this.scene && this.scene.renderer) {
-                    this.scene.renderer.clearingLines = [];
-                    this.scene.renderer.markBoardDirty();
-                }
-                
-                // 실제 줄 제거
-                const clearResult2 = this.board.clearLines();
-                if (clearResult2.count > 0) {
-                    this.handleLineClear(clearResult2.count);
-                } else {
-                    this.combo = 0;
-                }
-                
-                // 보드 다시 그리기 강제
-                if (this.scene && this.scene.renderer) {
-                    this.scene.renderer.markBoardDirty();
-                }
-                
-                // 다음 블록 생성 후 잠금 해제
-                this.spawnNextBlock();
-                this.isLocking = false;
-            });
-        } else {
-            this.combo = 0;
-            this.spawnNextBlock();
-        }
-    }
-    
-    handleLineClear(linesCleared) {
-        this.lines += linesCleared;
-        this.combo++;
-        this.maxCombo = Math.max(this.maxCombo, this.combo);
-        
-        // 점수 계산 (레벨 없이)
-        const baseScore = CONFIG.SCORES[linesCleared] || 0;
-        let score = baseScore;
-        
-        // 줄 제거 사운드 재생
-        if (this.scene) {
-            if (linesCleared === 4) {
-                // 테트리스 사운드 (4줄)
-                this.scene.playSound('tetris', 0.7);
-            } else {
-                // 일반 줄 제거 사운드 (line_clear가 없으면 tetris 사용)
-                if (!this.scene.playSound('line_clear', 0.6)) {
-                    this.scene.playSound('tetris', 0.5);
-                }
-            }
-        }
-        
-        // 콤보 보너스 (누적)
-        if (this.combo > 1) {
-            // 콤보당 50점 보너스 (누적)
-            const comboBonus = 50 * (this.combo - 1);
-            score += comboBonus;
-            // 콤보 사운드 (콤보 2 이상일 때)
-            if (this.scene && this.combo > 1) {
-                this.scene.playSound('combo', 0.5);
-            }
-        }
-        
-        // 백투백 테트리스 보너스 (연속 테트리스 시)
-        if (linesCleared === 4) {
-            if (this.backToBack) {
-                score = Math.floor(score * 1.5);
-            }
-            this.backToBack = true;
-        } else {
-            this.backToBack = false;
-        }
-        
-        this.score += score;
-    }
-    
-    hold() {
-        if (!this.canHold) return false;
-        
-        // 홀드한 블록이 있으면 교환
-        if (this.holdBlock) {
-            const temp = this.holdBlock;
-            this.holdBlock = new Tetromino(this.currentBlock.type, null);
-            this.currentBlock = new Tetromino(temp.type, null);
-            this.currentBlock.resetPosition();
-        } else {
-            // 홀드한 블록이 없으면 현재 블록을 홀드하고 다음 블록 사용
-            this.holdBlock = new Tetromino(this.currentBlock.type, null);
-            this.currentBlock = this.nextBlock;
-            const nextType = this.blockBag.getNext();
-            this.nextBlock = new Tetromino(nextType, this.blockBag);
-            this.currentBlock.resetPosition();
-        }
-        
-        // 홀드 후 같은 블록을 연속으로 홀드하는 것 방지
-        this.canHold = false;
-        return true;
-    }
-    
-    moveBlock(dx, dy) {
-        if (!this.currentBlock) return false;
-        
-        const testBlock = this.currentBlock.copy();
-        testBlock.move(dx, dy);
-        
-        if (this.board.isValidPosition(testBlock, testBlock.x, testBlock.y)) {
-            this.currentBlock.move(dx, dy);
-            return true;
-        }
-        return false;
-    }
-    
-    rotateBlock() {
-        if (!this.currentBlock) return false;
-        
-        const oldRotation = this.currentBlock.rotate();
-        
-        if (this.board.isValidPosition(this.currentBlock, this.currentBlock.x, this.currentBlock.y)) {
-            return true;
-        }
-        
-        // SRS 벽 킥 시도
-        const offsets = this.currentBlock.type === 'I' 
-            ? SRS_OFFSETS.I[oldRotation] 
-            : SRS_OFFSETS.default[oldRotation];
-        
-        for (let i = 0; i < offsets.length; i++) {
-            const [dx, dy] = offsets[i];
-            const testBlock = this.currentBlock.copy();
-            testBlock.move(dx, dy);
-            
-            if (this.board.isValidPosition(testBlock, testBlock.x, testBlock.y)) {
-                this.currentBlock.move(dx, dy);
-                return true;
-            }
-        }
-        
-        // 회전 실패 시 되돌리기
-        this.currentBlock.rotateBack();
-        return false;
-    }
-    
-    hardDrop() {
-        if (!this.currentBlock) return 0;
-        
-        let dropDistance = 0;
-        while (this.moveBlock(0, 1)) {
-            dropDistance++;
-        }
-        
-        this.lockBlock();
-        return dropDistance;
-    }
-    
-    softDrop() {
-        if (this.moveBlock(0, 1)) {
-            return true;
-        } else {
-            this.lockBlock();
-            return false;
-        }
-    }
-    
-    autoDrop() {
-        if (this.moveBlock(0, 1)) {
-            return true;
-        } else {
-            this.lockBlock();
-            return false;
-        }
-    }
-    
-    update(delta, isSoftDropping = false) {
-        // 게임 오버, 일시정지, 블록 없음, 라인 클리어 중이면 업데이트 중지
-        if (this.isGameOver || this.isPaused || !this.currentBlock || this.isLocking) return;
-        
-        // 소프트 드롭 중일 때는 자동 낙하 타이머를 리셋하지 않음 (더 빠른 낙하)
-        if (!isSoftDropping) {
-            this.fallTimer += delta;
-            
-            if (this.fallTimer >= this.fallSpeed) {
-                this.fallTimer = 0;
-                if (!this.autoDrop()) {
-                    // 블록이 고정됨
-                }
-            }
-        }
-    }
-}
+import { CONFIG, TETROMINO_COLORS } from './gameConfig.js';
+import { GameState } from './gameEngine.js';
+import { readBestScore, readAudioEnabled, savePreference } from './storage.js';
+import Phaser from 'phaser';
 
 // 렌더러 클래스 (최적화됨)
 export class TetrisRenderer {
@@ -474,7 +14,6 @@ export class TetrisRenderer {
         this.nextBlockGraphics = null;
         this.holdBlockGraphics = null;
         this.clearingLines = [];
-        this.isClearingLines = false;
         
         // 최적화: 더티 플래그 패턴
         this.boardDirty = true;
@@ -578,11 +117,8 @@ export class TetrisRenderer {
             this.boardBackgroundDrawn = true;
         }
         
-        // clearingLines가 있으면 항상 다시 그리기 (라인 클리어 중)
-        const hasClearingLines = this.clearingLines.length > 0;
-        
         // 보드 상태가 변경되었을 때만 셀 다시 그리기
-        if (!this.isBoardChanged() && !this.boardDirty && !hasClearingLines) {
+        if (!this.isBoardChanged() && !this.boardDirty) {
             return;
         }
         this.boardDirty = false;
@@ -632,14 +168,14 @@ export class TetrisRenderer {
     }
     
     drawGhostBlock() {
-        if (this.ghostGraphics) {
-            this.ghostGraphics.destroy();
-            this.ghostGraphics = null;
-        }
-        
-        if (!this.gameState.currentBlock) return;
-        
         const block = this.gameState.currentBlock;
+        const state = block ? `${block.type}-${block.x}-${block.y}-${block.rotation}-${this.gameState.board.version}` : null;
+        if (this.lastGhostState === state) return;
+        this.lastGhostState = state;
+        this.ghostGraphics?.destroy();
+        this.ghostGraphics = null;
+        if (!block) return;
+
         const ghostY = this.gameState.board.getGhostY(block, block.x, block.y);
         
         if (ghostY === block.y) return;
@@ -666,7 +202,12 @@ export class TetrisRenderer {
     }
     
     drawCurrentBlock() {
-        if (!this.gameState.currentBlock) return;
+        if (!this.gameState.currentBlock) {
+            this.currentBlockGraphics?.forEach(graphic => graphic.destroy());
+            this.currentBlockGraphics = null;
+            this.lastCurrentBlock = null;
+            return;
+        }
         
         // 변경되지 않았으면 스킵
         if (!this.isCurrentBlockChanged() && this.currentBlockGraphics && this.currentBlockGraphics.length > 0) {
@@ -883,12 +424,6 @@ export class TetrisRenderer {
     }
     
     showLineClearEffect(rows, count, combo = 0) {
-        // 중복 호출 방지
-        if (this.isClearingLines) {
-            return;
-        }
-        this.isClearingLines = true;
-        
         const startX = CONFIG.BOARD_OFFSET_X;
         const startY = CONFIG.BOARD_OFFSET_Y;
         const boardWidth = CONFIG.BOARD_WIDTH * CONFIG.CELL_SIZE;
@@ -1006,7 +541,6 @@ export class TetrisRenderer {
             ease: 'Power2',
             onComplete: () => {
                 text.destroy();
-                this.isClearingLines = false;
             }
         });
         
@@ -1015,12 +549,6 @@ export class TetrisRenderer {
             this.createLineClearParticles(startX, lineCenterY, boardWidth, count);
         }
         
-        // 안전 플래그 리셋
-        this.scene.time.delayedCall(600, () => {
-            if (this.isClearingLines) {
-                this.isClearingLines = false;
-            }
-        });
     }
     
     createLineClearParticles(x, y, width, count) {
@@ -1075,470 +603,216 @@ export class TetrisRenderer {
     }
 }
 
-// 메인 게임 씬
+// Phaser owns rendering and lifecycle; the engine owns only deterministic game state.
 export default class TetrisScene extends Phaser.Scene {
     constructor() {
         super({ key: 'TetrisScene' });
-        // localStorage에서 오디오 설정 복원 (없으면 기본 ON)
-        const savedAudio = localStorage.getItem('tetrisAudioEnabled');
-        this.soundEnabled = savedAudio === null ? true : savedAudio === 'true';
-        this.sounds = {};
-        this.touchSoftDropping = false;  // 터치 소프트드롭 hold 상태
-        this.gameOverOverlay = null;
-        this.gameOverText = null;
-        this.gameOverScoreText = null;
-        this.gameOverRestartText = null;
+        this.soundEnabled = readAudioEnabled();
+        this.bestScore = readBestScore();
     }
 
     preload() {
-        // 사운드 파일 로드 (MP3와 WAV 모두 지원)
-        // Phaser는 배열의 첫 번째 파일을 시도하고, 실패하면 다음 파일 시도
-        // 실제 존재하는 파일에 맞게 경로 설정 (WAV 우선)
-        const soundFiles = [
-            { key: 'bgm', paths: ['/sounds/bgm.mp3', '/sounds/bgm.wav'] },
-            { key: 'drop', paths: ['/sounds/drop.wav', '/sounds/drop.mp3'] },
-            { key: 'game_over', paths: ['/sounds/game_over.wav', '/sounds/game_over.mp3'] },
-            { key: 'tetris', paths: ['/sounds/tetris.wav', '/sounds/tetris.mp3'] },
-            // 선택적 사운드 (파일이 없을 수 있음)
-            { key: 'move', paths: ['/sounds/move.wav', '/sounds/move.mp3'] },
-            { key: 'rotate', paths: ['/sounds/rotate.wav', '/sounds/rotate.mp3'] },
-            { key: 'line_clear', paths: ['/sounds/line_clear.wav', '/sounds/line_clear.mp3'] },
-            { key: 'hold', paths: ['/sounds/hold.wav', '/sounds/hold.mp3'] },
-            { key: 'combo', paths: ['/sounds/combo.wav', '/sounds/combo.mp3'] }
-        ];
-        
-        // 사운드 파일 로드 (Phaser는 배열의 첫 번째 파일을 시도하고, 실패하면 다음 파일 시도)
-        soundFiles.forEach(sound => {
-            try {
-                this.load.audio(sound.key, sound.paths);
-            } catch (e) {
-                // 사운드 로드 실패 시 무시 (파일이 없을 수 있음)
-            }
-        });
+        for (const [key, file] of Object.entries({ bgm: 'bgm.mp3', drop: 'drop.wav', game_over: 'game_over.wav', tetris: 'tetris.wav' })) {
+            this.load.audio(key, `/sounds/${file}`);
+        }
     }
 
     create() {
-        // 사운드 초기화
-        this.initSounds();
-
-        // 게임 상태 초기화
-        this.gameState = new GameState();
-        this.gameState.scene = this; // 사운드 재생을 위해 scene 참조 전달
-        this.renderer = new TetrisRenderer(this, this.gameState);
-        
-        // 키보드 입력 설정
-        this.setupControls();
-        
-        // HUD 업데이트
-        this.updateHUD();
-        
-        // 게임 루프 시작
         this.isRunning = true;
-        
-        // 로딩 화면 숨기기
-        setTimeout(() => {
-            const loadingScreen = document.getElementById('loading-screen');
-            if (loadingScreen) {
-                loadingScreen.classList.add('hidden');
+        this.helpOpen = false;
+        this.softDropping = false;
+        this.softDropTimer = 0;
+        this.pauseObjects = [];
+        this.gameOverObjects = [];
+        this.lastHUD = '';
+        this.sounds = {};
+        this.gameState = new GameState({ onEvent: event => this.handleGameEvent(event) });
+        this.renderer = new TetrisRenderer(this, this.gameState);
+        for (const key of ['bgm', 'drop', 'game_over', 'tetris']) {
+            if (this.cache.audio.exists(key)) {
+                this.sounds[key] = this.sound.add(key, { volume: key === 'bgm' ? 0.3 : 0.5, loop: key === 'bgm' });
             }
-        }, 500);
+        }
+        this.setupControls();
+        this.onBlur = () => this.setPaused(true);
+        this.onVisibility = () => { if (document.hidden) this.setPaused(true); };
+        this.onStorage = event => {
+            if (event.key === 'tetrisBestScore') {
+                this.bestScore = Math.max(this.bestScore, readBestScore());
+                this.updateHUD();
+            }
+        };
+        window.addEventListener('blur', this.onBlur);
+        window.addEventListener('storage', this.onStorage);
+        document.addEventListener('visibilitychange', this.onVisibility);
+        this.events.once(Phaser.Scenes.Events.SHUTDOWN, this.shutdown, this);
+        this.renderer.update();
+        this.updateHUD();
+        if (document.hidden) this.setPaused(true);
+        this.syncAudio();
     }
-    
-    initSounds() {
-        // 사운드 객체 초기화 (파일이 로드되었으면 사용)
-        const soundKeys = ['bgm', 'move', 'rotate', 'drop', 'line_clear', 'tetris', 'hold', 'game_over', 'combo'];
-        soundKeys.forEach(key => {
-            try {
-                // Phaser 3에서 사운드가 로드되었는지 확인
-                if (this.cache.audio.exists(key)) {
-                    if (key === 'bgm') {
-                        // 배경음악은 루프 설정
-                        this.sounds[key] = this.sound.add(key, { volume: 0.3, loop: true });
-                    } else {
-                        // 효과음은 일반 설정 (allowMultiple: true로 동시 재생 가능)
-                        this.sounds[key] = this.sound.add(key, { volume: 0.5 });
-                    }
-                }
-            } catch (e) {
-                // 사운드 파일이 없으면 무시
-            }
-        });
-        
-        // 배경음악 시작 (soundEnabled 상태 확인)
-        try {
-            if (this.sounds['bgm'] && this.soundEnabled) {
-                this.sounds['bgm'].play();
-            }
-        } catch (e) {
-            // 배경음악 재생 실패 시 무시
+
+    shutdown() {
+        this.isRunning = false;
+        window.removeEventListener('keydown', this.onKeyDown);
+        window.removeEventListener('keyup', this.onKeyUp);
+        window.removeEventListener('blur', this.onBlur);
+        window.removeEventListener('storage', this.onStorage);
+        document.removeEventListener('visibilitychange', this.onVisibility);
+        Object.values(this.sounds).forEach(sound => sound.destroy());
+        this.sounds = {};
+    }
+
+    handleGameEvent(event) {
+        if (event.type === 'lock') this.playSound('drop', 0.4);
+        if (event.type === 'clearStart') this.renderer.showLineClearEffect(event.rows, event.count, event.combo);
+        if (event.type === 'clearEnd') {
+            this.renderer.clearingLines = [];
+            this.renderer.markBoardDirty();
+            this.playSound('tetris', event.count === 4 ? 0.7 : 0.5);
         }
     }
-    
-    // 외부(버튼)에서 오디오 ON/OFF 토글
+
+    syncAudio() {
+        const bgm = this.sounds.bgm;
+        if (!bgm) return;
+        try {
+            if (this.soundEnabled && this.isRunning && !this.gameState.isPaused) {
+                if (bgm.isPaused) bgm.resume();
+                else if (!bgm.isPlaying) bgm.play();
+            } else if (bgm.isPlaying) bgm.pause();
+        } catch { /* Audio is optional when a browser blocks playback. */ }
+    }
+
     toggleAudio() {
         this.soundEnabled = !this.soundEnabled;
-        localStorage.setItem('tetrisAudioEnabled', this.soundEnabled.toString());
-
-        try {
-            if (this.sounds['bgm']) {
-                if (this.soundEnabled) {
-                    // 게임이 진행 중이면 BGM 재개
-                    if (!this.gameState.isGameOver && !this.gameState.isPaused) {
-                        this.sounds['bgm'].resume();
-                        if (!this.sounds['bgm'].isPlaying) {
-                            this.sounds['bgm'].play();
-                        }
-                    }
-                } else {
-                    // 오디오 OFF: BGM 일시정지
-                    if (this.sounds['bgm'].isPlaying) {
-                        this.sounds['bgm'].pause();
-                    }
-                }
-            }
-        } catch (e) {
-            // 무시
-        }
-
+        savePreference('tetrisAudioEnabled', this.soundEnabled);
+        if (!this.soundEnabled) Object.values(this.sounds).forEach(sound => sound.stop());
+        this.syncAudio();
+        this.updateHUD();
         return this.soundEnabled;
     }
-    
-    playSound(soundKey, volume = 0.5) {
+
+    playSound(key, volume = 0.5) {
         if (!this.soundEnabled) return false;
-        
-        try {
-            // 배경음악은 저장된 사운드 객체 사용
-            if (soundKey === 'bgm') {
-                if (this.sounds[soundKey]) {
-                    const sound = this.sounds[soundKey];
-                    if (sound.isPlaying) {
-                        return true;
-                    }
-                    sound.play({ volume: volume });
-                    return true;
-                }
-                return false;
-            }
-            
-            // 효과음은 캐시에서 직접 재생 (매번 새 인스턴스)
-            if (this.cache.audio.exists(soundKey)) {
-                const sound = this.sound.add(soundKey, { volume: volume });
-                sound.play();
-                
-                // 재생 완료 후 정리 (메모리 누수 방지)
-                sound.once('complete', () => {
-                    if (sound && !sound.isPlaying) {
-                        sound.destroy();
-                    }
-                });
-                
-                return true;
-            }
-            
-            return false;
-        } catch (e) {
-            // 사운드 재생 실패 시 조용히 무시
-            return false;
-        }
+        try { return this.sounds[key]?.play({ volume }) ?? false; } catch { return false; }
     }
-    
+
     setupControls() {
-        // 키보드 입력
-        this.cursors = this.input.keyboard.createCursorKeys();
-        this.spaceKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
-        this.cKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.C);
-        this.pKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.P);
-        
-        // 입력 가능 여부 체크 헬퍼
-        const canInput = () => this.isRunning && !this.gameState.isPaused && !this.gameState.isLocking;
-        
-        // 키 반복 설정
-        this.input.keyboard.on('keydown-LEFT', () => {
-            if (canInput()) {
-                this.gameState.moveBlock(-1, 0);
-                this.playSound('move', 0.3);
-                this.renderer.update();
-            }
-        });
-        
-        this.input.keyboard.on('keydown-RIGHT', () => {
-            if (canInput()) {
-                this.gameState.moveBlock(1, 0);
-                this.playSound('move', 0.3);
-                this.renderer.update();
-            }
-        });
-        
-        // 소프트 드롭 (점수 없음, 빠른 낙하만)
-        this.input.keyboard.on('keydown-DOWN', () => {
-            if (canInput()) {
-                this.gameState.softDrop(false); // 점수 없음
-                this.renderer.update();
-            }
-        });
-        
-        this.input.keyboard.on('keydown-UP', () => {
-            if (canInput()) {
-                this.gameState.rotateBlock();
-                this.playSound('rotate', 0.4);
-                this.renderer.update();
-            }
-        });
-        
-        this.spaceKey.on('down', () => {
-            if (canInput()) {
-                this.gameState.hardDrop();
-                this.playSound('drop', 0.6);
-                this.renderer.update();
-            }
-        });
-        
-        this.cKey.on('down', () => {
-            if (canInput()) {
-                this.gameState.hold();
-                this.playSound('hold', 0.4);
-                this.renderer.update();
-            }
-        });
-        
-        this.pKey.on('down', () => {
-            // 게임이 실행 중일 때만 일시정지 가능
-            if (this.isRunning && !this.gameState.isGameOver) {
-                this.gameState.isPaused = !this.gameState.isPaused;
-                if (this.gameState.isPaused) {
-                    this.showPauseScreen();
-                } else {
-                    this.hidePauseScreen();
-                }
-            }
-        });
-        
+        const actions = { ArrowLeft: 'left', ArrowRight: 'right', ArrowUp: 'rotate', ArrowDown: 'softDrop', Space: 'hardDrop', KeyC: 'hold', KeyP: 'pause' };
+        this.onKeyDown = event => {
+            if (this.helpOpen || event.altKey || event.ctrlKey || event.metaKey || event.target?.closest?.('button, input, textarea, select, dialog, [contenteditable="true"]')) return;
+            const action = actions[event.code];
+            if (!action) return;
+            event.preventDefault();
+            if (event.repeat && !['left', 'right'].includes(action)) return;
+            if (action === 'softDrop') {
+                this.softDropping = this.gameState.canAct();
+                this.softDropTimer = 0;
+            } else this.executeAction(action);
+        };
+        this.onKeyUp = event => { if (event.code === 'ArrowDown') this.softDropping = false; };
+        window.addEventListener('keydown', this.onKeyDown);
+        window.addEventListener('keyup', this.onKeyUp);
     }
 
-    // ─── 터치 컨트롤에서 호출하는 공용 액션 디스패처 ────────────────────
     executeAction(action) {
-        const canInput = () =>
-            this.isRunning && !this.gameState.isPaused && !this.gameState.isLocking;
-
-        switch (action) {
-            case 'left':
-                if (canInput()) {
-                    this.gameState.moveBlock(-1, 0);
-                    this.playSound('move', 0.3);
-                    this.renderer.update();
-                }
-                break;
-            case 'right':
-                if (canInput()) {
-                    this.gameState.moveBlock(1, 0);
-                    this.playSound('move', 0.3);
-                    this.renderer.update();
-                }
-                break;
-            case 'rotate':
-                if (canInput()) {
-                    this.gameState.rotateBlock();
-                    this.playSound('rotate', 0.4);
-                    this.renderer.update();
-                }
-                break;
-            case 'softDrop':
-                if (canInput()) {
-                    this.gameState.softDrop(false);
-                    this.renderer.update();
-                }
-                break;
-            case 'hardDrop':
-                if (canInput()) {
-                    this.gameState.hardDrop();
-                    this.playSound('drop', 0.6);
-                    this.renderer.update();
-                }
-                break;
-            case 'hold':
-                if (canInput()) {
-                    this.gameState.hold();
-                    this.playSound('hold', 0.4);
-                    this.renderer.update();
-                }
-                break;
-            case 'pause':
-                if (this.isRunning && !this.gameState.isGameOver) {
-                    this.gameState.isPaused = !this.gameState.isPaused;
-                    if (this.gameState.isPaused) {
-                        this.showPauseScreen();
-                    } else {
-                        this.hidePauseScreen();
-                    }
-                }
-                break;
-            default:
-                break;
-        }
+        if (!this.isRunning || this.helpOpen) return;
+        if (action === 'pause') return this.setPaused(!this.gameState.isPaused);
+        if (!this.gameState.canAct()) return;
+        const actions = {
+            left: () => this.gameState.moveBlock(-1, 0),
+            right: () => this.gameState.moveBlock(1, 0),
+            rotate: () => this.gameState.rotateBlock(),
+            softDrop: () => this.gameState.softDrop(),
+            hardDrop: () => this.gameState.hardDrop(),
+            hold: () => this.gameState.hold()
+        };
+        actions[action]?.();
+        this.renderer.update();
+        if (this.gameState.isGameOver) this.gameOver();
+        this.updateHUD();
     }
-    
+
     update(time, delta) {
         if (!this.isRunning || this.gameState.isPaused) return;
-        
-        // 라인 클리어 중에는 소프트 드롭 무시
-        const canDrop = !this.gameState.isLocking;
-        
-        // 소프트 드롭: 키보드(↓) OR 터치 소프트드롭 버튼 hold
-        const isSoftDropping = canDrop && (
-            (this.cursors && this.cursors.down.isDown) || this.touchSoftDropping
-        );
-        
-        if (isSoftDropping) {
-            if (!this.softDropTimer || time >= this.softDropTimer) {
-                this.gameState.softDrop(false); // 점수 없음
-                this.softDropTimer = time + 30; // 30ms마다 한 번씩 (더 빠른 반응)
+        if (this.softDropping && this.gameState.canAct()) {
+            this.softDropTimer -= delta;
+            if (this.softDropTimer <= 0) {
+                this.gameState.softDrop();
+                this.softDropTimer = 30;
             }
-        } else {
-            this.softDropTimer = 0;
         }
-        
-        // 게임 상태 업데이트 (소프트 드롭 중인지 전달)
-        this.gameState.update(delta, isSoftDropping);
-        
-        // 렌더링 업데이트 (프레임당 한 번만)
+        this.gameState.update(delta, this.softDropping);
         this.renderer.update();
-        
-        // HUD 업데이트
+        if (this.gameState.isGameOver) this.gameOver();
         this.updateHUD();
-        
-        // 게임 오버 체크
-        if (this.gameState.isGameOver) {
-            this.gameOver();
-        }
     }
 
     updateHUD() {
-        const linesEl = document.getElementById('lines-count');
-        const scoreEl = document.getElementById('current-score');
-        const comboEl = document.getElementById('combo-count');
-        const bestEl = document.getElementById('best-score');
+        const state = this.gameState;
+        if (state.score > this.bestScore) {
+            this.bestScore = Math.max(state.score, readBestScore());
+            savePreference('tetrisBestScore', this.bestScore);
+        }
+        const snapshot = { ready: this.isRunning || state.isGameOver, score: state.score, lines: state.lines,
+            combo: state.combo, best: this.bestScore, paused: state.isPaused, gameOver: state.isGameOver,
+            audioEnabled: this.soundEnabled, locking: state.isLocking };
+        const key = JSON.stringify(snapshot);
+        if (key !== this.lastHUD) {
+            this.lastHUD = key;
+            this.game.events.emit('tetris-state', snapshot);
+        }
+    }
 
-        if (linesEl) linesEl.textContent = this.gameState.lines;
-        if (scoreEl) scoreEl.textContent = this.gameState.score.toLocaleString();
-        if (comboEl) comboEl.textContent = this.gameState.combo;
+    setPaused(paused) {
+        this.softDropping = false;
+        this.softDropTimer = 0;
+        if (!this.isRunning || this.gameState.isGameOver || this.gameState.isPaused === paused) return;
+        this.gameState.isPaused = paused;
+        if (paused) {
+            this.tweens.pauseAll();
+            this.pauseObjects = this.showOverlay('일시정지', '계속하기 버튼 또는 P 키로 재개', '#00f5ff');
+        } else {
+            this.pauseObjects.forEach(object => object.destroy());
+            this.pauseObjects = [];
+            this.tweens.resumeAll();
+        }
+        this.syncAudio();
+        this.updateHUD();
+    }
 
-        // 최고 점수 저장 및 표시
-        const savedBest = parseInt(localStorage.getItem('tetrisBestScore') || '0');
-        const currentBest = Math.max(this.gameState.score, savedBest);
-        if (this.gameState.score > savedBest) {
-            localStorage.setItem('tetrisBestScore', this.gameState.score.toString());
-        }
-        if (bestEl) bestEl.textContent = currentBest.toLocaleString();
-    }
-    
-    showPauseScreen() {
-        // 일시정지 화면 표시
-        if (this.pauseOverlay) {
-            this.pauseOverlay.destroy();
-        }
-        
-        this.pauseOverlay = this.add.graphics();
-        this.pauseOverlay.fillStyle(0x000000, 0.8);
-        this.pauseOverlay.fillRect(0, 0, this.cameras.main.width, this.cameras.main.height);
-        
-        this.pauseText = this.add.text(
-            this.cameras.main.width / 2,
-            this.cameras.main.height / 2,
-            '일시정지\n\nP 키를 눌러 계속하기',
-            {
-                fontSize: '32px',
-                color: '#00f5ff',
-                fontFamily: 'Arial',
-                fontStyle: 'bold',
-                align: 'center'
-            }
-        ).setOrigin(0.5);
-    }
-    
-    hidePauseScreen() {
-        // 일시정지 화면 숨기기
-        if (this.pauseOverlay) {
-            this.pauseOverlay.destroy();
-            this.pauseOverlay = null;
-        }
-        if (this.pauseText) {
-            this.pauseText.destroy();
-            this.pauseText = null;
-        }
-    }
-    
-    clearGameOverUI() {
-        if (this.gameOverOverlay) {
-            this.gameOverOverlay.destroy();
-            this.gameOverOverlay = null;
-        }
-        if (this.gameOverText) {
-            this.gameOverText.destroy();
-            this.gameOverText = null;
-        }
-        if (this.gameOverScoreText) {
-            this.gameOverScoreText.destroy();
-            this.gameOverScoreText = null;
-        }
-        if (this.gameOverRestartText) {
-            this.gameOverRestartText.destroy();
-            this.gameOverRestartText = null;
-        }
+    showOverlay(title, subtitle, color) {
+        const { width, height } = this.cameras.main;
+        const shade = this.add.rectangle(width / 2, height / 2, width, height, 0x000000, 0.8).setDepth(2000);
+        const heading = this.add.text(width / 2, height / 2 - 35, title, {
+            fontSize: '42px', fontFamily: 'Arial', fontStyle: 'bold', color, align: 'center'
+        }).setOrigin(0.5).setDepth(2001);
+        const detail = this.add.text(width / 2, height / 2 + 40, subtitle, {
+            fontSize: '22px', fontFamily: 'Arial', color: '#ffffff', align: 'center'
+        }).setOrigin(0.5).setDepth(2001);
+        return [shade, heading, detail];
     }
 
     gameOver() {
-        if (this.gameOverOverlay) return;
+        if (!this.isRunning) return;
         this.isRunning = false;
-
-        try {
-            if (this.sounds['bgm'] && this.sounds['bgm'].isPlaying) {
-                this.sounds['bgm'].stop();
-            }
-        } catch (e) {}
-
-        this.playSound('game_over', 0.8);
-
-        this.gameOverOverlay = this.add.graphics();
-        this.gameOverOverlay.fillStyle(0x000000, 0.7);
-        this.gameOverOverlay.fillRect(0, 0, this.cameras.main.width, this.cameras.main.height);
-        this.gameOverOverlay.setDepth(2000);
-
-        this.gameOverText = this.add.text(
-            this.cameras.main.width / 2,
-            this.cameras.main.height / 2 - 50,
-            'GAME OVER',
-            { fontSize: '48px', color: '#ff0040', fontFamily: 'Arial', fontStyle: 'bold' }
-        ).setOrigin(0.5).setDepth(2001);
-
-        this.gameOverScoreText = this.add.text(
-            this.cameras.main.width / 2,
-            this.cameras.main.height / 2 + 20,
-            `최종 점수: ${this.gameState.score.toLocaleString()}`,
-            { fontSize: '24px', color: '#ffffff', fontFamily: 'Arial' }
-        ).setOrigin(0.5).setDepth(2001);
-
-        this.gameOverRestartText = this.add.text(
-            this.cameras.main.width / 2,
-            this.cameras.main.height / 2 + 80,
-            '새 게임 버튼을 눌러 다시 시작',
-            { fontSize: '18px', color: '#00f5ff', fontFamily: 'Arial' }
-        ).setOrigin(0.5).setDepth(2001);
+        this.gameState.isGameOver = true;
+        this.gameState.isPaused = false;
+        this.softDropping = false;
+        this.pauseObjects.forEach(object => object.destroy());
+        this.pauseObjects = [];
+        this.tweens.resumeAll();
+        this.syncAudio();
+        this.playSound('game_over', 0.7);
+        this.gameOverObjects = this.showOverlay('GAME OVER', `최종 점수: ${this.gameState.score.toLocaleString()}\n새 게임 버튼으로 다시 시작`, '#ff6b9d');
+        this.updateHUD();
     }
 
     newGame() {
-        this.clearGameOverUI();
-        this.gameState.reset();
-        this.isRunning = true;
-        this.renderer.markBoardDirty();
-        this.renderer.update();
-        this.updateHUD();
-
-        try {
-            if (this.sounds['bgm'] && !this.sounds['bgm'].isPlaying) {
-                this.sounds['bgm'].play();
-            }
-        } catch (e) {}
+        this.isRunning = false;
+        this.game.events.emit('tetris-state', { ready: false, audioEnabled: this.soundEnabled, best: this.bestScore });
+        // Phaser shutdown disposes all old displays, tweens, input handlers and audio.
+        this.scene.restart();
     }
 }
-
-// Phaser 게임 설정은 TetrisGame.jsx에서 처리됨
