@@ -10,3 +10,12 @@
   box-sizing: border-box;
 }
 
+
+/* App.css is loaded after component styles; keep the viewport rule here. */
+@media (any-pointer: coarse), (max-width: 768px), (max-width: 900px) and (max-height: 500px) {
+  .app {
+    height: 100dvh;
+    padding: 0;
+    align-items: stretch;
+  }
+}

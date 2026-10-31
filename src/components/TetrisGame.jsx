@@ -19,7 +19,7 @@ function TetrisGame() {
   const focusBoard = () => containerRef.current?.focus({ preventScroll: true })
 
   useEffect(() => {
-    const mq = window.matchMedia('(any-pointer: coarse), (max-width: 768px)')
+    const mq = window.matchMedia('(any-pointer: coarse), (max-width: 768px), (max-width: 900px) and (max-height: 500px)')
     const update = () => setIsTouchDevice(mq.matches)
     update()
     mq.addEventListener('change', update)
@@ -164,7 +164,7 @@ function TetrisGame() {
         </p>
         <div ref={containerRef} id="game-container" tabIndex={0} aria-label="테트리스 게임 조작 영역" />
 
-        {/* 모바일 터치 컨트롤 (pointer:coarse 기기에서만 표시) */}
+        {/* 터치 기기와 작은 화면의 컨트롤 */}
         {isTouchDevice && <TouchControls gameRef={gameRef} containerRef={containerRef} disabled={!status.ready || status.paused || status.gameOver || status.locking || helpOpen} />}
 
         <div className="game-controls">
