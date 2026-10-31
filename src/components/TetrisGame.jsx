@@ -42,6 +42,7 @@ function TetrisGame() {
         }
       })
       gameRef.current = game
+      window.__tetrisQA = game // Preview-only test bridge; removed before production.
     } catch {
       setBootError(true)
     }
