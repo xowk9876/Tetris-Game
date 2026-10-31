@@ -1,148 +1,69 @@
 import React, { useEffect, useRef, useCallback } from 'react'
 import './TouchControls.css'
+import { createRepeater, createGesture } from '../utils/inputControls.js'
 
-// ── 테트리스 가이드라인 기준 DAS / ARR ──────────────────────────────────
-const DAS_MS = 133
-const ARR_MS = 33
-
-// ── 스와이프 감도 ─────────────────────────────────────────────────────────
-const SWIPE_CELL_PX = 26
-const FLICK_VY_FAST = 0.75
-const SWIPE_MIN_Y   = 55
-const TAP_MAX_MOVE  = 14
-const TAP_MAX_MS    = 260
-
-function TouchControls({ gameRef }) {
-  const dasRef = useRef(null)
-  const arrRef = useRef(null)
-  const swipe  = useRef({
-    active: false,
-    startX: 0, startY: 0,
-    lastX: 0,  lastY: 0,
-    startTime: 0,
-    accX: 0,
-    hasMoved: false,
-  })
-
-  const act = useCallback((action) => {
-    const scene = gameRef.current?.scene?.scenes?.[0]
-    if (!scene) return
-    scene.executeAction(action)
+function TouchControls({ gameRef, containerRef, disabled }) {
+  const disabledRef = useRef(disabled)
+  disabledRef.current = disabled
+  const pointerRef = useRef(null)
+  const repeaterRef = useRef(null)
+  const act = useCallback(action => {
+    if (!disabledRef.current) gameRef.current?.scene?.getScene('TetrisScene')?.executeAction(action)
   }, [gameRef])
 
-  const vib = (pattern) => {
-    try { navigator.vibrate?.(pattern) } catch (_) {}
-  }
-
-  // ── DAS/ARR 좌우 반복 ─────────────────────────────────────────────────
-  const startRepeat = useCallback((action) => {
-    act(action)
-    vib(8)
-    clearTimeout(dasRef.current)
-    clearInterval(arrRef.current)
-    dasRef.current = setTimeout(() => {
-      arrRef.current = setInterval(() => act(action), ARR_MS)
-    }, DAS_MS)
-  }, [act])
-
-  const stopRepeat = useCallback(() => {
-    clearTimeout(dasRef.current)
-    clearInterval(arrRef.current)
-  }, [])
-
-  // ── 캔버스 스와이프 제스처 ────────────────────────────────────────────
   useEffect(() => {
-    let canvas = null
-    let retryId = null
-
-    function attach() {
-      const container = document.getElementById('game-container')
-      if (!container) { retryId = setTimeout(attach, 150); return }
-      canvas = container.querySelector('canvas') || container
-      canvas.style.touchAction = 'none'
-      canvas.addEventListener('touchstart',  onStart,  { passive: false })
-      canvas.addEventListener('touchmove',   onMove,   { passive: false })
-      canvas.addEventListener('touchend',    onEnd,    { passive: false })
-      canvas.addEventListener('touchcancel', onEnd,    { passive: false })
+    const repeater = createRepeater(act)
+    repeaterRef.current = repeater
+    const gesture = createGesture(act)
+    const container = containerRef.current
+    const cancel = () => { repeater.stop(); gesture.cancel(); pointerRef.current = null }
+    const down = event => {
+      if (disabledRef.current || event.pointerType === 'mouse' || !event.isPrimary) return
+      event.preventDefault()
+      container.setPointerCapture(event.pointerId)
+      gesture.start(event.pointerId, event.clientX, event.clientY, event.timeStamp)
     }
-
-    function onStart(e) {
-      e.preventDefault()
-      const t = e.touches[0], s = swipe.current
-      s.active = true
-      s.startX = s.lastX = t.clientX
-      s.startY = s.lastY = t.clientY
-      s.startTime = performance.now()
-      s.accX = 0; s.hasMoved = false
-    }
-
-    function onMove(e) {
-      e.preventDefault()
-      const s = swipe.current
-      if (!s.active) return
-      const t = e.touches[0]
-      const dx      = t.clientX - s.lastX
-      const totalDx = Math.abs(t.clientX - s.startX)
-      const totalDy = Math.abs(t.clientY - s.startY)
-
-      if (totalDx > totalDy * 0.9) {
-        s.accX += dx
-        while (Math.abs(s.accX) >= SWIPE_CELL_PX) {
-          act(s.accX > 0 ? 'right' : 'left')
-          s.accX -= Math.sign(s.accX) * SWIPE_CELL_PX
-          if (!s.hasMoved) { vib(6); s.hasMoved = true }
-        }
-      }
-      s.lastX = t.clientX; s.lastY = t.clientY
-    }
-
-    function onEnd(e) {
-      e.preventDefault()
-      const s = swipe.current
-      if (!s.active) return
-      s.active = false
-      const t = e.changedTouches[0]
-      const dx = t.clientX - s.startX
-      const dy = t.clientY - s.startY
-      const dt = performance.now() - s.startTime
-      const absDx = Math.abs(dx), absDy = Math.abs(dy)
-
-      // 탭 → 회전
-      if (!s.hasMoved && absDx < TAP_MAX_MOVE && absDy < TAP_MAX_MOVE && dt < TAP_MAX_MS) {
-        act('rotate'); vib(12); return
-      }
-      // 수직 스와이프
-      if (absDy > SWIPE_MIN_Y && absDy > absDx * 1.2) {
-        if (dy > 0) {
-          absDy / dt >= FLICK_VY_FAST
-            ? (act('hardDrop'), vib([18, 8, 18]))
-            : (act('softDrop'), vib(8))
-        } else {
-          act('hold'); vib(20)
-        }
-      }
-    }
-
-    attach()
+    const move = event => gesture.move(event.pointerId, event.clientX, event.clientY)
+    const up = event => gesture.end(event.pointerId, event.clientX, event.clientY, event.timeStamp)
+    const visibility = () => { if (document.hidden) cancel() }
+    container.addEventListener('pointerdown', down)
+    container.addEventListener('pointermove', move)
+    container.addEventListener('pointerup', up)
+    container.addEventListener('pointercancel', cancel)
+    container.addEventListener('lostpointercapture', cancel)
+    window.addEventListener('blur', cancel)
+    document.addEventListener('visibilitychange', visibility)
     return () => {
-      clearTimeout(retryId)
-      if (canvas) {
-        canvas.removeEventListener('touchstart',  onStart)
-        canvas.removeEventListener('touchmove',   onMove)
-        canvas.removeEventListener('touchend',    onEnd)
-        canvas.removeEventListener('touchcancel', onEnd)
-      }
+      cancel()
+      container.removeEventListener('pointerdown', down)
+      container.removeEventListener('pointermove', move)
+      container.removeEventListener('pointerup', up)
+      container.removeEventListener('pointercancel', cancel)
+      container.removeEventListener('lostpointercapture', cancel)
+      window.removeEventListener('blur', cancel)
+      document.removeEventListener('visibilitychange', visibility)
+      repeaterRef.current = null
     }
-  }, [act])
+  }, [act, containerRef, disabled])
 
-  // ── 버튼 핸들러 ───────────────────────────────────────────────────────
-  const down = (e, action, repeat = false) => {
-    e.preventDefault(); e.stopPropagation()
-    repeat ? startRepeat(action) : (act(action), vib(10))
-  }
-  const up = (e, repeat = false) => {
-    e.preventDefault()
-    if (repeat) stopRepeat()
+  const repeatProps = action => ({
+    disabled,
+    onPointerDown: event => {
+      if (!event.isPrimary || event.button !== 0 || disabled) return
+      event.preventDefault()
+      event.currentTarget.setPointerCapture(event.pointerId)
+      pointerRef.current = event.pointerId
+      repeaterRef.current?.start(action)
+    },
+    onPointerUp: stopRepeat,
+    onPointerCancel: stopRepeat,
+    onLostPointerCapture: stopRepeat,
+    onClick: event => { if (event.detail === 0) act(action) }
+  })
+  function stopRepeat(event) {
+    if (event.pointerId !== pointerRef.current) return
+    repeaterRef.current?.stop()
+    pointerRef.current = null
   }
 
   return (
@@ -161,9 +82,7 @@ function TouchControls({ gameRef }) {
         <div className="tc-zone tc-left">
           <button
             className="tc-btn tc-move"
-            onTouchStart={(e) => down(e, 'left', true)}
-            onTouchEnd={(e)   => up(e, true)}
-            onTouchCancel={(e)=> up(e, true)}
+            {...repeatProps('left')}
             aria-label="왼쪽 이동"
           >
             <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
@@ -174,9 +93,7 @@ function TouchControls({ gameRef }) {
 
           <button
             className="tc-btn tc-move"
-            onTouchStart={(e) => down(e, 'right', true)}
-            onTouchEnd={(e)   => up(e, true)}
-            onTouchCancel={(e)=> up(e, true)}
+            {...repeatProps('right')}
             aria-label="오른쪽 이동"
           >
             <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
@@ -196,8 +113,8 @@ function TouchControls({ gameRef }) {
           <div className="tc-row">
             <button
               className="tc-btn tc-hold"
-              onTouchStart={(e) => down(e, 'hold')}
-              onTouchEnd={(e)   => up(e)}
+              disabled={disabled}
+              onClick={() => act('hold')}
               aria-label="홀드"
             >
               <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
@@ -208,8 +125,8 @@ function TouchControls({ gameRef }) {
 
             <button
               className="tc-btn tc-rotate"
-              onTouchStart={(e) => down(e, 'rotate')}
-              onTouchEnd={(e)   => up(e)}
+              disabled={disabled}
+              onClick={() => act('rotate')}
               aria-label="회전"
             >
               <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
@@ -222,8 +139,8 @@ function TouchControls({ gameRef }) {
           {/* 아래: HARD DROP 풀폭 */}
           <button
             className="tc-btn tc-hard tc-hard-wide"
-            onTouchStart={(e) => down(e, 'hardDrop')}
-            onTouchEnd={(e)   => up(e)}
+            disabled={disabled}
+              onClick={() => act('hardDrop')}
             aria-label="하드 드롭 (즉시 낙하)"
           >
             <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">

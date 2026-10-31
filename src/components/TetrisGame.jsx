@@ -2,23 +2,24 @@ import React, { useEffect, useRef, useState } from 'react'
 import Phaser from 'phaser'
 import TetrisScene from '../utils/gameClassesFull'
 import TouchControls from './TouchControls'
+import { readAudioEnabled, readBestScore } from '../utils/storage.js'
 import './TetrisGame.css'
 
 function TetrisGame() {
   const gameRef = useRef(null)
   const containerRef = useRef(null)
   const helpModalRef = useRef(null)
-  // localStorage에서 초기 오디오 상태 로드
-  const [audioEnabled, setAudioEnabled] = useState(() => {
-    const saved = localStorage.getItem('tetrisAudioEnabled')
-    return saved === null ? true : saved === 'true'
-  })
-  // 터치(모바일) 기기 여부 감지
+  const [status, setStatus] = useState(() => ({ ready: false, score: 0, lines: 0, combo: 0,
+    best: readBestScore(), paused: false, gameOver: false, locking: false, audioEnabled: readAudioEnabled() }))
   const [isTouchDevice, setIsTouchDevice] = useState(false)
+  const [helpOpen, setHelpOpen] = useState(false)
+  const [bootError, setBootError] = useState(false)
+  const { audioEnabled } = status
+  const scene = () => gameRef.current?.scene?.getScene('TetrisScene')
+  const focusBoard = () => containerRef.current?.focus({ preventScroll: true })
 
   useEffect(() => {
-    // pointer: coarse = 터치 기기 (스마트폰/태블릿)
-    const mq = window.matchMedia('(pointer: coarse)')
+    const mq = window.matchMedia('(any-pointer: coarse), (max-width: 768px), (max-width: 900px) and (max-height: 500px)')
     const update = () => setIsTouchDevice(mq.matches)
     update()
     mq.addEventListener('change', update)
@@ -26,128 +27,51 @@ function TetrisGame() {
   }, [])
 
   useEffect(() => {
-    if (!containerRef.current) return
-
-    // Phaser 게임 설정
-    const config = {
-      type: Phaser.AUTO,
-      width: 800,
-      height: 900,
-      parent: containerRef.current,
-      backgroundColor: 'transparent',
-      scene: TetrisScene,
-      physics: {
-        default: 'arcade',
-        arcade: { gravity: { y: 0 } }
-      },
-      antialias: true,
-      pixelArt: false
-    }
-
-    // 게임 시작
-    const game = new Phaser.Game(config)
-    gameRef.current = game
-
-    // 전역 접근 (기존 코드 호환성)
-    window.tetrisGame = game
-
-    // 이벤트 리스너 설정
-    const helpBtn = document.getElementById('help-btn')
-    const closeHelpBtn = document.getElementById('close-help')
-    const newGameBtn = document.getElementById('new-game-btn')
-    const giveUpBtn = document.getElementById('give-up-btn')
-
-    // 이벤트 핸들러 함수들 (cleanup을 위해 별도로 정의)
-    const handleHelpClick = () => {
-      if (helpModalRef.current) {
-        helpModalRef.current.classList.add('show')
-      }
-    }
-
-    const handleCloseHelpClick = () => {
-      if (helpModalRef.current) {
-        helpModalRef.current.classList.remove('show')
-      }
-    }
-
-    const handleNewGameClick = () => {
-      if (game.scene.scenes[0]) {
-        game.scene.scenes[0].newGame()
-      }
-    }
-
-    const handleGiveUpClick = () => {
-      if (game.scene.scenes[0]) {
-        const scene = game.scene.scenes[0]
-        if (scene.gameState && !scene.gameState.isGameOver) {
-          scene.gameState.isGameOver = true
-          scene.isRunning = false
-          scene.gameOver()
+    let game
+    const receiveState = snapshot => setStatus(current => ({ ...current, ...snapshot }))
+    try {
+      game = new Phaser.Game({
+        type: Phaser.AUTO, width: 800, height: 900, parent: containerRef.current,
+        transparent: true, scene: TetrisScene, antialias: true,
+        callbacks: {
+          preBoot: instance => instance.events.on('tetris-state', receiveState),
+          postBoot: instance => {
+            instance.canvas.setAttribute('aria-label', '테트리스 게임판. 키보드 조작법은 조작법 버튼에서 확인하세요.')
+            instance.canvas.setAttribute('role', 'img')
+          }
         }
-      }
+      })
+      gameRef.current = game
+    } catch {
+      setBootError(true)
     }
-
-    const handleAudioToggle = () => {
-      const scene = game.scene.scenes[0]
-      if (!scene) return
-      const newState = scene.toggleAudio()
-      setAudioEnabled(newState)
-    }
-
-    const audioBtn = document.getElementById('audio-toggle-btn')
-    if (audioBtn) {
-      audioBtn.addEventListener('click', handleAudioToggle)
-    }
-
-    // 조작법 모달
-    if (helpBtn) {
-      helpBtn.addEventListener('click', handleHelpClick)
-    }
-
-    if (closeHelpBtn) {
-      closeHelpBtn.addEventListener('click', handleCloseHelpClick)
-    }
-
-    // 새 게임 버튼
-    if (newGameBtn) {
-      newGameBtn.addEventListener('click', handleNewGameClick)
-    }
-
-    // 게임 포기 버튼
-    if (giveUpBtn) {
-      giveUpBtn.addEventListener('click', handleGiveUpClick)
-    }
-
     return () => {
-      // 이벤트 리스너 제거
-      if (helpBtn) {
-        helpBtn.removeEventListener('click', handleHelpClick)
-      }
-      if (closeHelpBtn) {
-        closeHelpBtn.removeEventListener('click', handleCloseHelpClick)
-      }
-      if (newGameBtn) {
-        newGameBtn.removeEventListener('click', handleNewGameClick)
-      }
-      if (giveUpBtn) {
-        giveUpBtn.removeEventListener('click', handleGiveUpClick)
-      }
-      if (audioBtn) {
-        audioBtn.removeEventListener('click', handleAudioToggle)
-      }
-
-      // Phaser 게임 정리
-      if (gameRef.current) {
-        gameRef.current.destroy(true)
-        gameRef.current = null
-      }
-
-      // 전역 변수 정리
-      if (window.tetrisGame) {
-        delete window.tetrisGame
-      }
+      game?.events.off('tetris-state', receiveState)
+      game?.destroy(true)
+      gameRef.current = null
     }
   }, [])
+
+  const openHelp = () => {
+    const current = scene()
+    current?.setPaused(true)
+    if (current) current.helpOpen = true
+    setHelpOpen(true)
+    helpModalRef.current?.showModal()
+  }
+  const closeHelp = () => {
+    const current = scene()
+    if (current) current.helpOpen = false
+    setHelpOpen(false)
+    focusBoard()
+  }
+  const runControl = action => {
+    const current = scene()
+    if (action === 'new') current?.newGame()
+    if (action === 'pause') current?.executeAction('pause')
+    if (action === 'quit') current?.gameOver()
+    focusBoard()
+  }
 
   return (
     <div className="tetris-game-wrapper">
@@ -187,6 +111,9 @@ function TetrisGame() {
           {/* 오디오 ON/OFF 토글 버튼 */}
           <button
             id="audio-toggle-btn"
+            onClick={() => scene()?.toggleAudio()}
+            disabled={!status.ready}
+            aria-pressed={audioEnabled}
             className={`audio-toggle-btn${audioEnabled ? '' : ' muted'}`}
             title={audioEnabled ? '오디오 끄기' : '오디오 켜기'}
             aria-label={audioEnabled ? '오디오 끄기' : '오디오 켜기'}
@@ -211,59 +138,69 @@ function TetrisGame() {
           <div className="game-hud">
             <div className="hud-panel">
               <div className="hud-label">줄 수</div>
-              <div className="hud-value" id="lines-count">0</div>
+              <div className="hud-value" id="lines-count">{status.lines}</div>
             </div>
             
             <div className="hud-panel">
               <div className="hud-label">점수</div>
-              <div className="hud-value" id="current-score">0</div>
+              <div className="hud-value" id="current-score">{status.score.toLocaleString()}</div>
             </div>
             
             <div className="hud-panel">
               <div className="hud-label">콤보</div>
-              <div className="hud-value" id="combo-count">0</div>
+              <div className="hud-value" id="combo-count">{status.combo}</div>
             </div>
 
             <div className="hud-panel hud-panel-best">
               <div className="hud-label">최고 점수</div>
-              <div className="hud-value hud-value-best" id="best-score">0</div>
+              <div className="hud-value hud-value-best" id="best-score">{status.best.toLocaleString()}</div>
             </div>
           </div>
 
         </div>
 
-        <div ref={containerRef} id="game-container" />
+        <p className="game-status" role="status" aria-live="polite">
+          {bootError ? '게임을 불러오지 못했어요. 페이지를 새로고침해 주세요.' : !status.ready ? '게임 불러오는 중…' : status.gameOver ? '게임 종료 · 새 게임으로 다시 시작하세요.' : status.paused ? '일시정지 · 계속하기를 눌러 재개하세요.' : '게임 진행 중'}
+        </p>
+        <div ref={containerRef} id="game-container" tabIndex={0} aria-label="테트리스 게임 조작 영역" />
 
-        {/* 모바일 터치 컨트롤 (pointer:coarse 기기에서만 표시) */}
-        {isTouchDevice && <TouchControls gameRef={gameRef} />}
+        {/* 터치 기기와 작은 화면의 컨트롤 */}
+        {isTouchDevice && <TouchControls gameRef={gameRef} containerRef={containerRef} disabled={!status.ready || status.paused || status.gameOver || status.locking || helpOpen} />}
 
         <div className="game-controls">
-          <button className="control-btn primary-btn" id="new-game-btn">
+          <button className="control-btn primary-btn" id="new-game-btn" disabled={!status.ready} onClick={() => runControl('new')}>
             🎮 새 게임
           </button>
-          <button className="control-btn secondary-btn" id="help-btn">
+          <button className="control-btn secondary-btn" id="pause-btn" disabled={!status.ready || status.gameOver} onClick={() => runControl('pause')}>
+            {status.paused ? '▶ 계속하기' : 'Ⅱ 일시정지'}
+          </button>
+          <button className="control-btn secondary-btn" id="help-btn" disabled={!status.ready} onClick={openHelp}>
             ❓ 조작법
           </button>
-          <button className="control-btn danger-btn" id="give-up-btn">
+          <button className="control-btn danger-btn" id="give-up-btn" disabled={!status.ready || status.gameOver} onClick={() => runControl('quit')}>
             🚫 게임 포기
           </button>
         </div>
       </div>
 
-      <div ref={helpModalRef} id="help-modal" className="help-modal">
+      <dialog ref={helpModalRef} id="help-modal" className="help-modal" aria-labelledby="help-title" onClose={closeHelp}>
         <div className="help-modal-content">
-          <h2>🎮 조작법</h2>
+          <h2 id="help-title">🎮 조작법</h2>
           <div className="help-content">
             <p><strong>← →</strong> : 좌우 이동</p>
             <p><strong>↑</strong> : 블록 회전</p>
             <p><strong>↓</strong> : 소프트 드롭 (빠른 낙하)</p>
             <p><strong>Space</strong> : 하드 드롭 (즉시 낙하)</p>
             <p><strong>C</strong> : 홀드 (블록 보관)</p>
-            <p><strong>P</strong> : 일시정지</p>
+            <p><strong>P</strong> : 일시정지 / 계속하기</p>
+            <h3>휴대폰 · 태블릿</h3>
+            <p>화면 아래 버튼으로 이동·회전·홀드·즉시 낙하할 수 있어요. 이동 버튼을 길게 누르면 반복 이동합니다.</p>
+            <p>게임판 탭: 회전 · 좌우 밀기: 이동 · 위로 밀기: 홀드 · 아래로 빠르게 밀기: 즉시 낙하</p>
+            <p>홀드는 블록 하나당 한 번 사용할 수 있어요. 조작법을 닫은 뒤 계속하기를 누르면 게임이 재개됩니다.</p>
           </div>
-          <button id="close-help" className="close-help-btn">닫기</button>
+          <button id="close-help" className="close-help-btn" onClick={() => helpModalRef.current?.close()}>닫기</button>
         </div>
-      </div>
+      </dialog>
     </div>
   )
 }

@@ -3,11 +3,6 @@
    SOFT DROP 버튼 제거 / LEFT·RIGHT 세로 2버튼 / HARD DROP 풀폭
    ============================================================ */
 
-/* ── 데스크탑(마우스 주 입력) 에서는 완전히 숨김 ─────────── */
-@media (pointer: fine) {
-  .tc-wrap { display: none !important; }
-}
-
 /* ── 래퍼 ────────────────────────────────────────────────── */
 .tc-wrap {
   width: 100%;
@@ -281,3 +276,6 @@
 
   .tc-hint-text { font-size: 9px; }
 }
+
+.tc-btn { touch-action: none; }
+.tc-btn:disabled { opacity: .4; transform: none; }
