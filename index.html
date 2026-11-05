@@ -3,79 +3,60 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-
-    <!-- Primary Meta Tags -->
-    <title>테트리스 - Tetris Game | 무료 온라인 테트리스</title>
-    <meta name="title" content="테트리스 - Tetris Game | 무료 온라인 테트리스">
-    <meta name="description" content="클래식 테트리스를 무료로 즐기세요! 7-Bag 랜덤 시스템, 홀드(Hold) 기능, 콤보 시스템, 고스트 피스를 갖춘 현대적인 테트리스 게임. Play free classic Tetris online with hold, combo & ghost piece.">
-    <meta name="keywords" content="테트리스, tetris, 테트리스 게임, tetris game, 온라인 테트리스, free tetris, play tetris online, 무료 테트리스, 퍼즐 게임, puzzle game">
-    <meta name="author" content="TetrisGame">
-    <meta name="robots" content="index, follow">
-    <meta name="language" content="Korean">
+    <title>테트리스 게임 | PC·모바일 무료 온라인 플레이</title>
+    <meta name="description" content="설치 없이 즐기는 1인용 테트리스 게임. PC에서는 키보드로, 휴대폰에서는 터치로 블록을 옮겨 가로줄을 채우세요. 홀드와 다음 블록 미리보기를 활용해 내 최고 점수에 도전할 수 있어요.">
     <link rel="canonical" href="https://tetrisgame-fawn.vercel.app/">
 
-    <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website">
-    <meta property="og:url" content="https://tetrisgame-fawn.vercel.app/">
-    <meta property="og:title" content="테트리스 - Tetris Game | 무료 온라인 테트리스">
-    <meta property="og:description" content="클래식 테트리스를 무료로 즐기세요! 7-Bag 시스템, 홀드, 콤보, 고스트 피스를 갖춘 현대적인 테트리스 게임입니다.">
-    <meta property="og:image" content="https://tetrisgame-fawn.vercel.app/og-image.svg">
-    <meta property="og:image:width" content="1200">
-    <meta property="og:image:height" content="630">
     <meta property="og:locale" content="ko_KR">
-    <meta property="og:site_name" content="Tetris Game">
-
-    <!-- Twitter Card -->
+    <meta property="og:site_name" content="테트리스 게임">
+    <meta property="og:url" content="https://tetrisgame-fawn.vercel.app/">
+    <meta property="og:title" content="테트리스 게임 | PC·모바일 무료 온라인 플레이">
+    <meta property="og:description" content="키보드와 터치로 즐기는 무료 테트리스. 블록을 돌리고 홀드해 가로줄을 완성하고 최고 점수에 도전하세요.">
+    <meta property="og:image" content="https://tetrisgame-fawn.vercel.app/tetris-game.jpg">
+    <meta property="og:image:type" content="image/jpeg">
+    <meta property="og:image:width" content="1363">
+    <meta property="og:image:height" content="936">
+    <meta property="og:image:alt" content="블록이 내려오는 테트리스 게임판과 점수판, 다음 블록 미리보기">
     <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:url" content="https://tetrisgame-fawn.vercel.app/">
-    <meta name="twitter:title" content="테트리스 - Tetris Game | 무료 온라인 테트리스">
-    <meta name="twitter:description" content="클래식 테트리스를 무료로 즐기세요! 홀드, 콤보, 고스트 피스를 갖춘 현대적인 테트리스 게임입니다.">
-    <meta name="twitter:image" content="https://tetrisgame-fawn.vercel.app/og-image.svg">
-
-    <!-- Favicon & Icons -->
     <link rel="icon" type="image/svg+xml" href="/favicon.svg">
     <link rel="manifest" href="/manifest.json">
     <meta name="theme-color" content="#00f5ff">
-    <meta name="msapplication-TileColor" content="#0a0a1a">
-
-    <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Exo+2:wght@300;400;600;700&display=swap" rel="stylesheet">
 
-    <!-- JSON-LD Structured Data -->
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
-      "@type": "WebApplication",
-      "name": "테트리스 - Tetris Game",
-      "alternateName": "Tetris Online",
-      "url": "https://tetrisgame-fawn.vercel.app/",
-      "description": "클래식 테트리스를 무료로 즐기세요! 7-Bag 랜덤 시스템, 홀드(Hold) 기능, 콤보 시스템, 고스트 피스를 갖춘 현대적인 테트리스 게임.",
-      "applicationCategory": "GameApplication",
-      "genre": "Puzzle",
-      "operatingSystem": "All",
-      "browserRequirements": "HTML5, JavaScript",
-      "inLanguage": "ko",
-      "offers": {
-        "@type": "Offer",
-        "price": "0",
-        "priceCurrency": "KRW"
-      },
-      "featureList": [
-        "7-Bag 랜덤 블록 시스템",
-        "홀드(Hold) 기능",
-        "콤보 시스템",
-        "고스트 피스",
-        "소프트/하드 드롭",
-        "최고 점수 저장"
+      "@graph": [
+        {
+          "@type": "WebSite",
+          "@id": "https://tetrisgame-fawn.vercel.app/#website",
+          "url": "https://tetrisgame-fawn.vercel.app/",
+          "name": "테트리스 게임",
+          "inLanguage": "ko"
+        },
+        {
+          "@type": ["VideoGame", "WebApplication"],
+          "name": "테트리스 게임",
+          "url": "https://tetrisgame-fawn.vercel.app/",
+          "isPartOf": { "@id": "https://tetrisgame-fawn.vercel.app/#website" },
+          "description": "키보드와 터치로 블록을 옮겨 가로줄을 완성하는 무료 온라인 퍼즐 게임.",
+          "image": "https://tetrisgame-fawn.vercel.app/tetris-game.jpg",
+          "inLanguage": "ko",
+          "applicationCategory": "GameApplication",
+          "gamePlatform": "웹 브라우저",
+          "playMode": "https://schema.org/SinglePlayer",
+          "isAccessibleForFree": true
+        }
       ]
     }
     </script>
 </head>
 <body>
-    <div id="root"></div>
-    <noscript>테트리스를 실행하려면 브라우저에서 JavaScript를 켜 주세요.</noscript>
+    <noscript><p class="script-notice">게임을 플레이하려면 자바스크립트를 켜 주세요. <a href="/how-to-play.html">테트리스 조작법과 점수표 보기</a></p></noscript>
+    <main id="root"><!--app-html--></main>
     <script type="module" src="/src/main.jsx"></script>
 </body>
 </html>

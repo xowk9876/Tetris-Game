@@ -62,6 +62,8 @@ npm run check
 
 빌드된 파일은 `dist/` 폴더에 생성됩니다.
 
+홈 화면은 빌드 시 HTML로도 생성됩니다. 검색용 조작 안내는 `/how-to-play.html`, 두 페이지의 사이트맵은 `/sitemap.xml`입니다. Google Search Console이나 네이버 서치어드바이저의 HTML 태그로 소유권을 확인할 때는 발급받은 `content` 값만 Vercel 환경 변수 `GOOGLE_SITE_VERIFICATION` 또는 `NAVER_SITE_VERIFICATION`에 넣고 다시 빌드하세요.
+
 ## 🎮 게임 조작
 
 | 키 | 기능 |

@@ -685,7 +685,7 @@ export default class TetrisScene extends Phaser.Scene {
     setupControls() {
         const actions = { ArrowLeft: 'left', ArrowRight: 'right', ArrowUp: 'rotate', ArrowDown: 'softDrop', Space: 'hardDrop', KeyC: 'hold', KeyP: 'pause' };
         this.onKeyDown = event => {
-            if (this.helpOpen || event.altKey || event.ctrlKey || event.metaKey || event.target?.closest?.('button, input, textarea, select, dialog, [contenteditable="true"]')) return;
+            if (this.helpOpen || event.altKey || event.ctrlKey || event.metaKey || event.target?.closest?.('a[href], button, input, textarea, select, dialog, [contenteditable="true"]')) return;
             const action = actions[event.code];
             if (!action) return;
             event.preventDefault();

@@ -1,16 +1,13 @@
 import React, { useEffect, useRef, useState } from 'react'
-import Phaser from 'phaser'
-import TetrisScene from '../utils/gameClassesFull'
 import TouchControls from './TouchControls'
-import { readAudioEnabled, readBestScore } from '../utils/storage.js'
 import './TetrisGame.css'
 
 function TetrisGame() {
   const gameRef = useRef(null)
   const containerRef = useRef(null)
   const helpModalRef = useRef(null)
-  const [status, setStatus] = useState(() => ({ ready: false, score: 0, lines: 0, combo: 0,
-    best: readBestScore(), paused: false, gameOver: false, locking: false, audioEnabled: readAudioEnabled() }))
+  const [status, setStatus] = useState({ ready: false, score: 0, lines: 0, combo: 0,
+    best: 0, paused: false, gameOver: false, locking: false, audioEnabled: true })
   const [isTouchDevice, setIsTouchDevice] = useState(false)
   const [helpOpen, setHelpOpen] = useState(false)
   const [bootError, setBootError] = useState(false)
@@ -28,8 +25,14 @@ function TetrisGame() {
 
   useEffect(() => {
     let game
+    let disposed = false
     const receiveState = snapshot => setStatus(current => ({ ...current, ...snapshot }))
-    try {
+    async function startGame() {
+      const [{ default: Phaser }, { default: TetrisScene }] = await Promise.all([
+        import('phaser'),
+        import('../utils/gameClassesFull.js'),
+      ])
+      if (disposed) return
       game = new Phaser.Game({
         type: Phaser.AUTO, width: 800, height: 900, parent: containerRef.current,
         transparent: true, scene: TetrisScene, antialias: true, audio: { noAudio: true },
@@ -42,10 +45,10 @@ function TetrisGame() {
         }
       })
       gameRef.current = game
-    } catch {
-      setBootError(true)
     }
+    startGame().catch(() => { if (!disposed) setBootError(true) })
     return () => {
+      disposed = true
       game?.events.off('tetris-state', receiveState)
       game?.destroy(true)
       gameRef.current = null
@@ -93,7 +96,7 @@ function TetrisGame() {
           </div>
           <h1 className="game-logo-title">
             <span className="logo-text-main">TETRIS</span>
-            <span className="logo-text-sub">테트리스</span>
+            <span className="logo-text-sub">무료 온라인 테트리스</span>
           </h1>
           <div className="game-logo-icon logo-icon-right" aria-hidden="true">
             <svg viewBox="0 0 34 52" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -162,9 +165,12 @@ function TetrisGame() {
 
         </div>
 
-        <p className="game-status" role="status" aria-live="polite">
-          {bootError ? '게임을 불러오지 못했어요. 페이지를 새로고침해 주세요.' : !status.ready ? '게임 불러오는 중…' : status.gameOver ? '게임 종료 · 새 게임으로 다시 시작하세요.' : status.paused ? '일시정지 · 계속하기를 눌러 재개하세요.' : '게임 진행 중'}
-        </p>
+        <div className="game-status">
+          <span role="status" aria-live="polite">
+            {bootError ? '게임을 불러오지 못했어요. 페이지를 새로고침해 주세요.' : !status.ready ? '게임 불러오는 중…' : status.gameOver ? '게임 종료 · 새 게임으로 다시 시작하세요.' : status.paused ? '일시정지 · 계속하기를 눌러 재개하세요.' : '게임 진행 중'}
+          </span>
+          <a href="/how-to-play.html" target="_blank" rel="noopener" aria-label="조작법과 점수표 (새 탭)">조작법·점수표</a>
+        </div>
         <div ref={containerRef} id="game-container" tabIndex={0} aria-label="테트리스 게임 조작 영역" />
 
         {/* 터치 기기와 작은 화면의 컨트롤 */}
@@ -190,6 +196,7 @@ function TetrisGame() {
         <div className="help-modal-content">
           <h2 id="help-title">🎮 조작법</h2>
           <div className="help-content">
+            <p>블록을 돌리고 옮겨 가로 한 줄을 빈틈없이 채우면 줄이 사라지고 점수를 얻어요. 블록의 착지 위치는 윤곽선으로 확인할 수 있어요.</p>
             <p><strong>← →</strong> : 좌우 이동</p>
             <p><strong>↑</strong> : 블록 회전</p>
             <p><strong>↓</strong> : 소프트 드롭 (빠른 낙하)</p>

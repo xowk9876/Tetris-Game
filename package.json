@@ -5,7 +5,7 @@
   "description": "\ud14c\ud2b8\ub9ac\uc2a4 \uac8c\uc784 - React + Phaser 3 + 3D \ub514\uc790\uc778",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "vite build && node scripts/prerender.mjs && node --test tests/production/search.test.js",
     "preview": "vite preview",
     "test": "node --test tests/*.test.js",
     "prebuild": "npm test",

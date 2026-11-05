@@ -669,6 +669,10 @@
 
 /* Keep focus and game status visible for keyboard and touch players. */
 .game-status { text-align: center; font-size: 12px; color: #b9c8df; min-height: 20px; flex-shrink: 0; }
+.game-status a { color: #9bedff; margin-inline-start: .8em; text-underline-offset: 2px; }
+.game-status a:focus-visible { outline: 2px solid #00f5ff; outline-offset: 1px; }
+.script-notice { position: fixed; inset: 0 0 auto; z-index: 20; background: #111329; color: white; padding: 12px; text-align: center; }
+.script-notice a { color: #9bedff; }
 #game-container { touch-action: none; }
 :where(button, #game-container):focus-visible { outline: 2px solid #00f5ff; outline-offset: -2px; }
 button:disabled { opacity: .45; cursor: default; transform: none; }

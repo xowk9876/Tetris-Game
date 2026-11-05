@@ -26,9 +26,9 @@
   ],
   "screenshots": [
     {
-      "src": "/og-image.svg",
-      "type": "image/svg+xml",
-      "sizes": "1200x630",
+      "src": "/tetris-game.jpg",
+      "type": "image/jpeg",
+      "sizes": "1363x936",
       "form_factor": "wide"
     }
   ]
