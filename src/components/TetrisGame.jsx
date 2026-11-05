@@ -32,7 +32,7 @@ function TetrisGame() {
     try {
       game = new Phaser.Game({
         type: Phaser.AUTO, width: 800, height: 900, parent: containerRef.current,
-        transparent: true, scene: TetrisScene, antialias: true,
+        transparent: true, scene: TetrisScene, antialias: true, audio: { noAudio: true },
         callbacks: {
           preBoot: instance => instance.events.on('tetris-state', receiveState),
           postBoot: instance => {
@@ -111,7 +111,10 @@ function TetrisGame() {
           {/* 오디오 ON/OFF 토글 버튼 */}
           <button
             id="audio-toggle-btn"
-            onClick={() => scene()?.toggleAudio()}
+            onClick={event => {
+              scene()?.toggleAudio()
+              if (event.detail > 0) focusBoard()
+            }}
             disabled={!status.ready}
             aria-pressed={audioEnabled}
             className={`audio-toggle-btn${audioEnabled ? '' : ' muted'}`}

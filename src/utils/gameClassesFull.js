@@ -1,5 +1,6 @@
 import { CONFIG, TETROMINO_COLORS } from './gameConfig.js';
 import { GameState } from './gameEngine.js';
+import { GameAudio } from './gameAudio.js';
 import { readBestScore, readAudioEnabled, savePreference } from './storage.js';
 import Phaser from 'phaser';
 
@@ -611,12 +612,6 @@ export default class TetrisScene extends Phaser.Scene {
         this.bestScore = readBestScore();
     }
 
-    preload() {
-        for (const [key, file] of Object.entries({ bgm: 'bgm.mp3', drop: 'drop.wav', game_over: 'game_over.wav', tetris: 'tetris.wav' })) {
-            this.load.audio(key, `/sounds/${file}`);
-        }
-    }
-
     create() {
         this.isRunning = true;
         this.helpOpen = false;
@@ -625,14 +620,9 @@ export default class TetrisScene extends Phaser.Scene {
         this.pauseObjects = [];
         this.gameOverObjects = [];
         this.lastHUD = '';
-        this.sounds = {};
+        this.audio = new GameAudio();
         this.gameState = new GameState({ onEvent: event => this.handleGameEvent(event) });
         this.renderer = new TetrisRenderer(this, this.gameState);
-        for (const key of ['bgm', 'drop', 'game_over', 'tetris']) {
-            if (this.cache.audio.exists(key)) {
-                this.sounds[key] = this.sound.add(key, { volume: key === 'bgm' ? 0.3 : 0.5, loop: key === 'bgm' });
-            }
-        }
         this.setupControls();
         this.onBlur = () => this.setPaused(true);
         this.onVisibility = () => { if (document.hidden) this.setPaused(true); };
@@ -646,6 +636,7 @@ export default class TetrisScene extends Phaser.Scene {
         window.addEventListener('storage', this.onStorage);
         document.addEventListener('visibilitychange', this.onVisibility);
         this.events.once(Phaser.Scenes.Events.SHUTDOWN, this.shutdown, this);
+        this.events.once(Phaser.Scenes.Events.DESTROY, this.shutdown, this);
         this.renderer.update();
         this.updateHUD();
         if (document.hidden) this.setPaused(true);
@@ -653,14 +644,15 @@ export default class TetrisScene extends Phaser.Scene {
     }
 
     shutdown() {
+        this.events.off(Phaser.Scenes.Events.SHUTDOWN, this.shutdown, this);
+        this.events.off(Phaser.Scenes.Events.DESTROY, this.shutdown, this);
         this.isRunning = false;
         window.removeEventListener('keydown', this.onKeyDown);
         window.removeEventListener('keyup', this.onKeyUp);
         window.removeEventListener('blur', this.onBlur);
         window.removeEventListener('storage', this.onStorage);
         document.removeEventListener('visibilitychange', this.onVisibility);
-        Object.values(this.sounds).forEach(sound => sound.destroy());
-        this.sounds = {};
+        this.audio.destroy();
     }
 
     handleGameEvent(event) {
@@ -674,28 +666,20 @@ export default class TetrisScene extends Phaser.Scene {
     }
 
     syncAudio() {
-        const bgm = this.sounds.bgm;
-        if (!bgm) return;
-        try {
-            if (this.soundEnabled && this.isRunning && !this.gameState.isPaused) {
-                if (bgm.isPaused) bgm.resume();
-                else if (!bgm.isPlaying) bgm.play();
-            } else if (bgm.isPlaying) bgm.pause();
-        } catch { /* Audio is optional when a browser blocks playback. */ }
+        this.audio.syncMusic(this.soundEnabled && this.isRunning && !this.gameState.isPaused);
     }
 
     toggleAudio() {
         this.soundEnabled = !this.soundEnabled;
         savePreference('tetrisAudioEnabled', this.soundEnabled);
-        if (!this.soundEnabled) Object.values(this.sounds).forEach(sound => sound.stop());
+        if (!this.soundEnabled) this.audio.pauseAll();
         this.syncAudio();
         this.updateHUD();
         return this.soundEnabled;
     }
 
     playSound(key, volume = 0.5) {
-        if (!this.soundEnabled) return false;
-        try { return this.sounds[key]?.play({ volume }) ?? false; } catch { return false; }
+        if (this.soundEnabled) this.audio.playEffect(key, volume);
     }
 
     setupControls() {
@@ -707,8 +691,10 @@ export default class TetrisScene extends Phaser.Scene {
             event.preventDefault();
             if (event.repeat && !['left', 'right'].includes(action)) return;
             if (action === 'softDrop') {
-                this.softDropping = this.gameState.canAct();
-                this.softDropTimer = 0;
+                if (!this.gameState.canAct()) return;
+                this.softDropping = true;
+                this.softDropTimer = 30;
+                this.executeAction('softDrop');
             } else this.executeAction(action);
         };
         this.onKeyUp = event => { if (event.code === 'ArrowDown') this.softDropping = false; };
@@ -720,6 +706,7 @@ export default class TetrisScene extends Phaser.Scene {
         if (!this.isRunning || this.helpOpen) return;
         if (action === 'pause') return this.setPaused(!this.gameState.isPaused);
         if (!this.gameState.canAct()) return;
+        this.syncAudio();
         const actions = {
             left: () => this.gameState.moveBlock(-1, 0),
             right: () => this.gameState.moveBlock(1, 0),
