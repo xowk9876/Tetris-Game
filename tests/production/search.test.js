@@ -29,6 +29,22 @@ test('the sitemap and canonical URLs point to both public pages', async () => {
   }
 })
 
+test('both pages advertise the square PNG favicon in the production build', async () => {
+  for (const page of ['index.html', 'how-to-play.html']) {
+    const head = (await read(page)).split('</head>')[0]
+    const links = head.match(/<link\b[^>]*>/g) ?? []
+    assert.ok(links.some(link => link.includes('rel="icon"') && link.includes('href="/favicon.png"')), page)
+  }
+
+  const png = await readFile(new URL('favicon.png', dist))
+  assert.deepEqual([...png.subarray(0, 8)], [137, 80, 78, 71, 13, 10, 26, 10])
+  assert.equal(png.readUInt32BE(16), 192, 'PNG width')
+  assert.equal(png.readUInt32BE(20), 192, 'PNG height')
+  const ico = await readFile(new URL('favicon.ico', dist))
+  assert.equal(ico.readUInt16LE(2), 1, 'ICO file type')
+  assert.ok(ico.readUInt16LE(4) > 0, 'ICO has at least one image')
+})
+
 test('the guide links back to the game and publishes its actual base scores', async () => {
   const guide = await read('how-to-play.html')
   assert.match(guide, /<a[^>]+href="\/"/)
