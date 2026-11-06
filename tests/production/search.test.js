@@ -16,6 +16,27 @@ test('the production homepage serves its game title and guide link before JavaSc
   assert.ok(!home.includes('<!--app-html-->'))
 })
 
+test('the search site name matches the home metadata and supplies a hostname fallback', async () => {
+  const home = await read('index.html')
+  const json = home.match(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/)?.[1]
+  assert.ok(json, 'missing structured data')
+  const website = JSON.parse(json)['@graph'].find(node => node['@type'] === 'WebSite')
+  assert.equal(website?.url, site + '/')
+  assert.ok(website.alternateName.includes(new URL(site).hostname))
+  assert.ok(home.includes('<meta property="og:site_name" content="' + website.name + '">'))
+})
+
+test('the game links to a static mobile guide with its control image', async () => {
+  const home = await read('index.html')
+  const guide = await read('how-to-play.html')
+  assert.ok(home.includes('href="/how-to-play.html#mobile-controls"'))
+  assert.match(guide, /<h2 id="mobile-controls">/)
+  assert.ok(guide.includes('src="/mobile-controls.webp"'))
+  const image = await readFile(new URL('mobile-controls.webp', dist))
+  assert.equal(image.toString('ascii', 0, 4), 'RIFF')
+  assert.equal(image.toString('ascii', 8, 12), 'WEBP')
+})
+
 test('the sitemap and canonical URLs point to both public pages', async () => {
   const xml = await read('sitemap.xml')
   assert.ok((await read('robots.txt')).includes('Sitemap: ' + site + '/sitemap.xml'))

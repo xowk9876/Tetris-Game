@@ -20,6 +20,7 @@ h1 { margin: 2.2rem 0 .55rem; font-size: clamp(1.8rem, 5vw, 2.65rem); line-heigh
 h2 { margin: 0 0 .75rem; font-size: 1.35rem; line-height: 1.35; }
 p { color: #c4cee0; margin: .75rem 0; }
 .intro { font-size: 1.08rem; }
+.touch-pad-image { display: block; max-width: 100%; height: auto; margin: 1rem 0; }
 section { margin: 2rem 0; }
 table { width: 100%; border-collapse: collapse; }
 th, td { text-align: left; padding: .55rem .5rem; border-bottom: 1px solid #283349; }

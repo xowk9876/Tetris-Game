@@ -116,10 +116,10 @@
 
 .logo-text-sub {
   font-family: 'Exo 2', sans-serif;
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 400;
-  letter-spacing: 4px;
-  color: rgba(255, 255, 255, 0.45);
+  letter-spacing: .08em;
+  color: #b6c5d9;
   text-transform: uppercase;
   -webkit-font-smoothing: antialiased;
 }
@@ -579,8 +579,7 @@
   }
 
   .logo-text-sub {
-    font-size: 8px;
-    letter-spacing: 2px;
+    font-size: 11px;
   }
 
   .game-logo-icon svg {
@@ -669,8 +668,9 @@
 
 /* Keep focus and game status visible for keyboard and touch players. */
 .game-status { text-align: center; font-size: 12px; color: #b9c8df; min-height: 20px; flex-shrink: 0; }
-.game-status a { color: #9bedff; margin-inline-start: .8em; text-underline-offset: 2px; }
-.game-status a:focus-visible { outline: 2px solid #00f5ff; outline-offset: 1px; }
+.game-status a, .help-content a { color: #9bedff; text-underline-offset: 2px; }
+.game-status a { margin-inline-start: .8em; }
+.game-status a:focus-visible, .help-content a:focus-visible { outline: 2px solid #00f5ff; outline-offset: 1px; }
 .script-notice { position: fixed; inset: 0 0 auto; z-index: 20; background: #111329; color: white; padding: 12px; text-align: center; }
 .script-notice a { color: #9bedff; }
 #game-container { touch-action: none; }

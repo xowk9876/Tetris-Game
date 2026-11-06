@@ -39,7 +39,7 @@ function TetrisGame() {
         callbacks: {
           preBoot: instance => instance.events.on('tetris-state', receiveState),
           postBoot: instance => {
-            instance.canvas.setAttribute('aria-label', '테트리스 게임판. 키보드 조작법은 조작법 버튼에서 확인하세요.')
+            instance.canvas.setAttribute('aria-label', '테트리스 게임판. 터치와 키보드 사용법은 조작법 버튼에서 확인하세요.')
             instance.canvas.setAttribute('role', 'img')
           }
         }
@@ -95,8 +95,8 @@ function TetrisGame() {
             </svg>
           </div>
           <h1 className="game-logo-title">
-            <span className="logo-text-main">TETRIS</span>
-            <span className="logo-text-sub">무료 온라인 테트리스</span>
+            <span className="logo-text-main">TETRIS</span>{' '}
+            <span className="logo-text-sub">PC·모바일 테트리스 게임</span>
           </h1>
           <div className="game-logo-icon logo-icon-right" aria-hidden="true">
             <svg viewBox="0 0 34 52" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -141,7 +141,7 @@ function TetrisGame() {
         </div>
 
         <div className="game-header">
-          <div className="game-hud">
+          <div className="game-hud" data-nosnippet="">
             <div className="hud-panel">
               <div className="hud-label">줄 수</div>
               <div className="hud-value" id="lines-count">{status.lines}</div>
@@ -166,10 +166,10 @@ function TetrisGame() {
         </div>
 
         <div className="game-status">
-          <span role="status" aria-live="polite">
+          <span role="status" aria-live="polite" data-nosnippet="">
             {bootError ? '게임을 불러오지 못했어요. 페이지를 새로고침해 주세요.' : !status.ready ? '게임 불러오는 중…' : status.gameOver ? '게임 종료 · 새 게임으로 다시 시작하세요.' : status.paused ? '일시정지 · 계속하기를 눌러 재개하세요.' : '게임 진행 중'}
           </span>
-          <a href="/how-to-play.html" target="_blank" rel="noopener" aria-label="조작법과 점수표 (새 탭)">조작법·점수표</a>
+          <a href="/how-to-play.html" target="_blank" rel="noopener" aria-label="테트리스 조작법·점수표 (새 탭)">테트리스 조작법·점수표</a>
         </div>
         <div ref={containerRef} id="game-container" tabIndex={0} aria-label="테트리스 게임 조작 영역" />
 
@@ -204,7 +204,7 @@ function TetrisGame() {
             <p><strong>C</strong> : 홀드 (블록 보관)</p>
             <p><strong>P</strong> : 일시정지 / 계속하기</p>
             <h3>휴대폰 · 태블릿</h3>
-            <p>화면 아래 버튼으로 이동·회전·홀드·즉시 낙하할 수 있어요. 이동 버튼을 길게 누르면 반복 이동합니다.</p>
+            <p>화면 아래 이동 버튼을 길게 누르면 반복해서 움직여요. <a href="/how-to-play.html#mobile-controls" target="_blank" rel="noopener" aria-label="터치 버튼 그림 보기 (새 탭)">터치 버튼 그림 보기</a></p>
             <p>게임판 탭: 회전 · 좌우 밀기: 이동 · 위로 밀기: 홀드 · 아래로 빠르게 밀기: 즉시 낙하</p>
             <p>홀드는 블록 하나당 한 번 사용할 수 있어요. 조작법을 닫은 뒤 계속하기를 누르면 게임이 재개됩니다.</p>
           </div>

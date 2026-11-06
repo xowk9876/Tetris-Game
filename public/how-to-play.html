@@ -3,14 +3,14 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>테트리스 조작법과 점수표 | 테트리스 게임</title>
-  <meta name="description" content="이 테트리스 게임의 키보드 단축키와 휴대폰 터치 조작을 한눈에 확인하세요. 홀드 사용법, 착지 위치 보는 법, 한 번에 지운 줄 수에 따른 기본 점수와 콤보 보너스를 설명해요.">
+  <title>테트리스 조작법과 점수표 | 모바일 터치·PC 단축키</title>
+  <meta name="description" content="모바일 테트리스에서 블록을 돌리고 옮겨 첫 줄을 지우는 방법을 알아보세요. 터치 버튼과 PC 단축키, 홀드 사용법, 한 번에 지운 줄 수에 따른 점수를 확인할 수 있어요.">
   <link rel="canonical" href="https://tetrisgame-fawn.vercel.app/how-to-play.html">
   <meta property="og:type" content="article">
   <meta property="og:locale" content="ko_KR">
   <meta property="og:site_name" content="테트리스 게임">
-  <meta property="og:title" content="테트리스 조작법과 점수표">
-  <meta property="og:description" content="PC 단축키, 모바일 제스처와 홀드 사용법을 익히고 줄 제거 점수를 확인하세요.">
+  <meta property="og:title" content="테트리스 조작법과 점수표 | 모바일 터치·PC 단축키">
+  <meta property="og:description" content="휴대폰에서 첫 블록을 놓는 방법부터 PC 단축키, 홀드와 줄 제거 점수까지 확인하세요.">
   <meta property="og:url" content="https://tetrisgame-fawn.vercel.app/how-to-play.html">
   <meta property="og:image" content="https://tetrisgame-fawn.vercel.app/tetris-game.jpg">
   <meta property="og:image:alt" content="테트리스 게임판과 착지 위치 윤곽선">
@@ -28,28 +28,33 @@
   </header>
   <main>
     <h1>테트리스 조작법과 점수표</h1>
-    <p class="intro">떨어지는 블록을 돌리고 옮겨 가로 10칸을 채우세요. 완성된 줄은 사라지고 그 위의 블록이 내려와요. 새 블록이 놓일 공간이 없어지면 게임이 끝나요.</p>
+    <p class="intro">떨어지는 블록으로 가로 10칸을 채우면 한 줄이 사라져요. 휴대폰에서는 게임판을 터치하고, PC에서는 키보드로 블록을 움직여요.</p>
+
+    <section aria-labelledby="mobile-controls">
+      <h2 id="mobile-controls">모바일에서 첫 블록 놓기</h2>
+      <p>게임판을 한 번 탭해 블록을 돌리고, 놓고 싶은 열까지 좌우로 밀어 보세요. 바닥에 보이는 옅은 윤곽선이 착지할 자리예요. 위치가 맞으면 <strong>HARD DROP</strong>을 눌러 바로 놓으세요.</p>
+      <img class="touch-pad-image" src="/mobile-controls.webp" width="366" height="148" alt="휴대폰 조작판 왼쪽의 LEFT·RIGHT 버튼과 오른쪽의 HOLD·ROTATE·HARD DROP 버튼">
+      <p>한 칸만 옮기고 싶을 때는 <strong>LEFT</strong>나 <strong>RIGHT</strong>를 한 번 누르세요. 길게 누르면 같은 방향으로 계속 움직여요.</p>
+    </section>
 
     <section aria-labelledby="controls">
-      <h2 id="controls">키보드와 휴대폰 조작</h2>
+      <h2 id="controls">터치와 키보드 조작표</h2>
       <table>
-        <thead><tr><th scope="col">동작</th><th scope="col">키보드</th><th scope="col">게임판 터치</th></tr></thead>
+        <thead><tr><th scope="col">동작</th><th scope="col">모바일</th><th scope="col">키보드</th></tr></thead>
         <tbody>
-          <tr><th scope="row">좌우 이동</th><td><kbd>←</kbd> <kbd>→</kbd></td><td>좌우로 밀기</td></tr>
-          <tr><th scope="row">회전</th><td><kbd>↑</kbd></td><td>한 번 탭</td></tr>
-          <tr><th scope="row">한 칸 내리기</th><td><kbd>↓</kbd></td><td>아래로 천천히 밀기</td></tr>
-          <tr><th scope="row">즉시 낙하</th><td><kbd>Space</kbd></td><td>아래로 빠르게 밀기</td></tr>
-          <tr><th scope="row">홀드</th><td><kbd>C</kbd></td><td>위로 밀기</td></tr>
-          <tr><th scope="row">일시정지·재개</th><td><kbd>P</kbd></td><td>게임판 아래 일시정지·계속하기 버튼</td></tr>
+          <tr><th scope="row">좌우 이동</th><td>좌우로 밀기</td><td><kbd>←</kbd> <kbd>→</kbd></td></tr>
+          <tr><th scope="row">회전</th><td>한 번 탭</td><td><kbd>↑</kbd></td></tr>
+          <tr><th scope="row">한 칸 내리기</th><td>아래로 천천히 밀기</td><td><kbd>↓</kbd></td></tr>
+          <tr><th scope="row">즉시 낙하</th><td>아래로 빠르게 밀기</td><td><kbd>Space</kbd></td></tr>
+          <tr><th scope="row">홀드</th><td>위로 밀기</td><td><kbd>C</kbd></td></tr>
+          <tr><th scope="row">일시정지·재개</th><td>일시정지·계속하기 버튼</td><td><kbd>P</kbd></td></tr>
         </tbody>
       </table>
-      <p>휴대폰에서는 화면 아래의 이동·회전·홀드·즉시 낙하 버튼도 쓸 수 있어요. 좌우 이동 버튼은 길게 누르면 반복해서 움직여요.</p>
     </section>
 
     <section aria-labelledby="placement">
-      <h2 id="placement">블록을 어디에 놓을지 고민될 때</h2>
-      <p>게임판 아래쪽의 옅은 윤곽선이 지금 블록의 착지 위치예요. 모양이 빈칸에 맞는지 확인한 뒤 즉시 낙하를 누르면 그 자리에 고정돼요.</p>
-      <p>당장 쓰기 어려운 블록은 홀드로 보관하세요. 보관함이 차 있으면 두 블록을 맞바꿔요. 현재 블록을 고정해야 다시 홀드를 쓸 수 있어요.</p>
+      <h2 id="placement">블록이 빈칸에 맞지 않을 때</h2>
+      <p>당장 쓰기 어려운 블록은 휴대폰의 <strong>HOLD</strong> 버튼이나 키보드의 <kbd>C</kbd>로 보관하세요. 보관함에 블록이 있으면 두 블록을 맞바꿔요. 현재 블록을 내려놓으면 다시 홀드할 수 있어요.</p>
     </section>
 
     <section aria-labelledby="scores">
