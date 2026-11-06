@@ -21,6 +21,9 @@ h2 { margin: 0 0 .75rem; font-size: 1.35rem; line-height: 1.35; }
 p { color: #c4cee0; margin: .75rem 0; }
 .intro { font-size: 1.08rem; }
 .touch-pad-image { display: block; max-width: 100%; height: auto; margin: 1rem 0; }
+.stack-example { display: flex; flex-wrap: wrap; align-items: center; gap: 1rem; margin: 1rem 0; padding: 1rem; background: #101829; border: 1px solid #283349; border-radius: .5rem; }
+.stack-example svg { display: block; max-width: 100%; height: auto; }
+.stack-example figcaption { flex: 1 1 12rem; color: #c4cee0; }
 section { margin: 2rem 0; }
 table { width: 100%; border-collapse: collapse; }
 th, td { text-align: left; padding: .55rem .5rem; border-bottom: 1px solid #283349; }

@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>테트리스 초보 공략 | 블록 쌓는 법·홀드·네 줄 지우기</title>
+  <meta name="description" content="테트리스 블록 아래에 구멍을 남기지 않는 법, 긴 막대로 네 줄을 한 번에 지우는 방법을 그림으로 익혀 보세요. 다음 블록과 홀드 사용 순서, 콤보 점수 예시도 담았어요.">
+  <link rel="canonical" href="https://tetrisgame-fawn.vercel.app/tetris-tips.html">
+  <meta property="og:type" content="article">
+  <meta property="og:locale" content="ko_KR">
+  <meta property="og:site_name" content="테트리스 게임">
+  <meta property="og:title" content="테트리스 초보 공략 | 블록 쌓는 법·홀드·네 줄 지우기">
+  <meta property="og:description" content="첫 줄부터 네 줄 지우기까지, 블록을 어디에 놓고 언제 홀드할지 그림과 점수 예시로 알아보세요.">
+  <meta property="og:url" content="https://tetrisgame-fawn.vercel.app/tetris-tips.html">
+  <meta property="og:image" content="https://tetrisgame-fawn.vercel.app/tetris-game.jpg">
+  <meta property="og:image:alt" content="착지 위치와 다음 블록을 보여주는 테트리스 게임판">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="icon" type="image/x-icon" sizes="16x16 32x32 48x48" href="/favicon.ico">
+  <link rel="icon" type="image/png" sizes="192x192" href="/favicon.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+  <meta name="theme-color" content="#090d1b">
+  <link rel="stylesheet" href="/guide.css">
+</head>
+<body>
+  <header>
+    <a class="brand" href="/"><img src="/favicon.svg" width="30" height="30" alt="">테트리스 게임</a>
+    <a class="play" href="/">게임하기 <span aria-hidden="true">→</span></a>
+  </header>
+  <main>
+    <h1>테트리스 초보 공략</h1>
+    <p class="intro">첫 목표는 가로 한 줄을 채우는 거예요. 블록을 떨어뜨리기 전에 착지할 자리와 다음 블록을 한 번씩 보면, 바닥을 비워 둔 채 위로만 높이 쌓는 일을 줄일 수 있어요.</p>
+
+    <section aria-labelledby="stacking">
+      <h2 id="stacking">구멍을 남기지 않고 블록 쌓는 법</h2>
+      <p>게임판 아래의 옅은 윤곽선은 지금 블록을 곧장 떨어뜨렸을 때의 모양이에요. 정사각형 블록 아래쪽에 빈칸이 보인다면 좌우로 옮겨 두 칸이 나란히 받쳐 주는 자리를 찾아보세요. 위가 덮인 빈칸은 나중에 옆에서 블록을 밀어 넣거나 위쪽 줄을 먼저 지워야 채울 수 있어요.</p>
+    </section>
+
+    <section aria-labelledby="hold">
+      <h2 id="hold">다음 블록을 보고 홀드 쓰기</h2>
+      <p>이 게임은 서로 다른 일곱 가지 블록을 한 묶음씩 섞어서 내보내요. 정사각형 블록이 떨어지는 중인데 막대 하나만 들어갈 틈이 있다면 ‘다음’ 칸을 보세요. 다음 블록이 긴 막대이고 보관함이 비었다면 <strong>홀드</strong>를 눌러 그 막대를 바로 쓸 수 있어요.</p>
+      <p>보관함이 차 있으면 현재 블록과 보관한 블록이 서로 바뀌어요. 휴대폰에서는 <strong>HOLD</strong> 버튼이나 위로 밀기, 컴퓨터에서는 <kbd>C</kbd>를 쓰세요. 꺼낸 블록을 놓으면 다음 홀드가 열려요.</p>
+    </section>
+
+    <section aria-labelledby="four-lines">
+      <h2 id="four-lines">긴 막대로 네 줄 한 번에 지우기</h2>
+      <p>판이 낮고 긴 막대를 보관해 뒀다면, 가장자리 한 열을 비우고 그 옆을 네 줄 높이로 채워 보세요. 막대를 세로로 돌려 빈 열에 내리면 네 줄이 동시에 사라져요. 블록이 꼭대기까지 쌓였다면 먼저 완성할 수 있는 한 줄부터 지워 공간을 확보하세요.</p>
+      <figure class="stack-example">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 128" width="200" height="160" role="img" aria-labelledby="well-title well-desc">
+          <title id="well-title">네 줄을 지우는 블록 배치</title>
+          <desc id="well-desc">아래 네 줄은 왼쪽 아홉 칸이 채워져 있다. 오른쪽에 비워 둔 한 열 위로 네 칸짜리 막대가 내려온다.</desc>
+          <defs>
+            <pattern id="grid" width="16" height="16" patternUnits="userSpaceOnUse"><rect width="16" height="16" fill="#0a1020" stroke="#25354a"/></pattern>
+            <pattern id="filled" width="16" height="16" patternUnits="userSpaceOnUse"><rect x="1" y="1" width="14" height="14" rx="2" fill="#7386b4"/></pattern>
+            <pattern id="bar" width="16" height="16" patternUnits="userSpaceOnUse"><rect x="1" y="1" width="14" height="14" rx="2" fill="#6cebf2"/></pattern>
+          </defs>
+          <rect width="160" height="128" fill="url(#grid)"/>
+          <rect y="64" width="144" height="64" fill="url(#filled)"/>
+          <rect x="144" width="16" height="64" fill="url(#bar)"/>
+          <rect x="145" y="65" width="14" height="62" rx="2" fill="none" stroke="#6cebf2" stroke-dasharray="3 2"/>
+        </svg>
+        <figcaption>오른쪽 점선이 막대의 착지 위치예요. 가로 열 칸이 모두 채워지는 줄을 아래에서부터 세어 보면 네 줄이에요.</figcaption>
+      </figure>
+    </section>
+
+    <section aria-labelledby="combo">
+      <h2 id="combo">콤보 점수와 연속 네 줄 보너스</h2>
+      <p>블록을 놓을 때마다 줄을 지우면 콤보가 이어져요. 줄을 지우지 않고 놓으면 콤보는 끊겨요. 이 게임에서는 직전에 지운 줄이 네 줄이었다면, 다음 줄 제거도 네 줄일 때 점수에 1.5배 보너스가 붙어요.</p>
+      <p>예를 들어 첫 네 줄을 지운 뒤 줄을 지우지 않는 블록을 하나 놓고, 다시 네 줄을 지우면 두 번째에는 <strong>1,800점</strong>을 얻어요. 콤보가 끊겼어도 네 줄 기본 점수 1,200점에 보너스가 붙은 거예요. <a href="/how-to-play.html#scores">한 줄부터 네 줄까지 기본 점수표 보기</a></p>
+    </section>
+    <a class="play" href="/">무료 테트리스 게임하기 <span aria-hidden="true">→</span></a>
+  </main>
+</body>
+</html>

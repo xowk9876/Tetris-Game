@@ -2,10 +2,12 @@ import test from 'node:test'
 import assert from 'node:assert/strict'
 import { readFile } from 'node:fs/promises'
 import { CONFIG } from '../../src/utils/gameConfig.js'
+import { GameState } from '../../src/utils/gameEngine.js'
 
 const site = 'https://tetrisgame-fawn.vercel.app'
 const dist = new URL('../../dist/', import.meta.url)
 const read = path => readFile(new URL(path, dist), 'utf8')
+const publicPages = ['index.html', 'how-to-play.html', 'tetris-tips.html']
 
 test('the production homepage serves its game title and guide link before JavaScript runs', async () => {
   const home = await read('index.html')
@@ -37,11 +39,11 @@ test('the game links to a static mobile guide with its control image', async () 
   assert.equal(image.toString('ascii', 8, 12), 'WEBP')
 })
 
-test('the sitemap and canonical URLs point to both public pages', async () => {
+test('the sitemap and canonical URLs point to every public page', async () => {
   const xml = await read('sitemap.xml')
   assert.ok((await read('robots.txt')).includes('Sitemap: ' + site + '/sitemap.xml'))
   const locations = [...xml.matchAll(/<loc>([^<]+)<\/loc>/g)].map(match => match[1])
-  assert.deepEqual(locations, [site + '/', site + '/how-to-play.html'])
+  assert.deepEqual(locations, publicPages.map(page => site + '/' + (page === 'index.html' ? '' : page)))
   for (const url of locations) {
     const html = await read(new URL(url).pathname.slice(1) || 'index.html')
     assert.ok(html.includes('<link rel="canonical" href="' + url + '">'))
@@ -50,8 +52,8 @@ test('the sitemap and canonical URLs point to both public pages', async () => {
   }
 })
 
-test('both pages advertise the square PNG favicon in the production build', async () => {
-  for (const page of ['index.html', 'how-to-play.html']) {
+test('all public pages advertise the square PNG favicon in the production build', async () => {
+  for (const page of publicPages) {
     const head = (await read(page)).split('</head>')[0]
     const links = head.match(/<link\b[^>]*>/g) ?? []
     assert.ok(links.some(link => link.includes('rel="icon"') && link.includes('href="/favicon.png"')), page)
@@ -72,4 +74,22 @@ test('the guide links back to the game and publishes its actual base scores', as
   for (const [lines, score] of Object.entries(CONFIG.SCORES)) {
     assert.ok(guide.includes(lines + '줄</th><td>' + score.toLocaleString('ko-KR') + '점</td>'))
   }
+})
+
+test('the beginner guide is linked in static HTML and its scoring example matches the game', async () => {
+  const home = await read('index.html')
+  const controls = await read('how-to-play.html')
+  const tips = await read('tetris-tips.html')
+  assert.ok(home.includes('href="/tetris-tips.html"'))
+  assert.ok(controls.includes('href="/tetris-tips.html#four-lines"'))
+  assert.ok(tips.includes('id="four-lines"'))
+  assert.ok(tips.includes('href="/how-to-play.html#scores"') && controls.includes('id="scores"'))
+
+  const game = new GameState()
+  game.handleLineClear(4)
+  const firstScore = game.score
+  game.hardDrop() // A piece on the empty board resets the combo without clearing a line.
+  game.handleLineClear(4)
+  const secondScore = (game.score - firstScore).toLocaleString('ko-KR')
+  assert.ok(tips.includes('<strong>' + secondScore + '점</strong>'))
 })

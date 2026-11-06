@@ -170,6 +170,7 @@ function TetrisGame() {
             {bootError ? '게임을 불러오지 못했어요. 페이지를 새로고침해 주세요.' : !status.ready ? '게임 불러오는 중…' : status.gameOver ? '게임 종료 · 새 게임으로 다시 시작하세요.' : status.paused ? '일시정지 · 계속하기를 눌러 재개하세요.' : '게임 진행 중'}
           </span>
           <a href="/how-to-play.html" target="_blank" rel="noopener" aria-label="테트리스 조작법·점수표 (새 탭)">테트리스 조작법·점수표</a>
+          <a href="/tetris-tips.html" target="_blank" rel="noopener" aria-label="테트리스 초보 공략 (새 탭)">초보 공략</a>
         </div>
         <div ref={containerRef} id="game-container" tabIndex={0} aria-label="테트리스 게임 조작 영역" />
 
