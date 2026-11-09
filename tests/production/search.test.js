@@ -9,6 +9,40 @@ const dist = new URL('../../dist/', import.meta.url)
 const read = path => readFile(new URL(path, dist), 'utf8')
 const publicPages = ['index.html', 'how-to-play.html', 'tetris-tips.html']
 
+test('guide schemas agree with visible headings, breadcrumbs and modification dates', async () => {
+  const sitemap = await read('sitemap.xml')
+  for (const page of publicPages.slice(1)) {
+    const html = await read(page)
+    const head = html.split('</head>')[0]
+    const url = site + '/' + page
+    const graph = JSON.parse(head.match(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/)[1])['@graph']
+    const article = graph.find(node => node['@type'] === 'Article')
+    const breadcrumbs = graph.find(node => node['@type'] === 'BreadcrumbList').itemListElement
+    assert.equal(article.headline, html.match(/<h1>([^<]+)<\/h1>/)[1])
+    assert.equal(article.description, head.match(/<meta name="description" content="([^"]+)"/)[1])
+    assert.equal(article.url, url)
+    assert.equal(article.mainEntityOfPage, url)
+    assert.equal(breadcrumbs[0].item, site + '/')
+    assert.equal(breadcrumbs[1].item, url)
+    assert.ok(html.includes('aria-current="page">' + breadcrumbs[1].name + '</li>'))
+    assert.ok(html.includes('<time datetime="' + article.dateModified + '">'))
+    const entry = sitemap.match(new RegExp('<loc>' + url.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '</loc>\\s*<lastmod>([^<]+)</lastmod>'))
+    assert.equal(entry?.[1], article.dateModified)
+  }
+})
+
+test('guide navigation resolves to real pages and section anchors in the build', async () => {
+  for (const page of publicPages.slice(1)) {
+    const html = await read(page)
+    for (const [, href] of html.matchAll(/<a[^>]+href="([^"]+)"/g)) {
+      const url = new URL(href, site + '/' + page)
+      if (url.origin !== site) continue
+      const target = await read(url.pathname.slice(1) || 'index.html')
+      if (url.hash) assert.ok(target.includes('id="' + url.hash.slice(1) + '"'), page + ': ' + href)
+    }
+  }
+})
+
 test('the production homepage serves its game title and guide link before JavaScript runs', async () => {
   const home = await read('index.html')
   const main = home.match(/<main id="root">([\s\S]*?)<\/main>/)?.[1]
