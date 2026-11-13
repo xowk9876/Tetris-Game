@@ -475,7 +475,7 @@
   .game-logo-bar > .game-logo-title,
   .game-hud,
   .game-status {
-    transform: translateX(32px);
+    transform: translateX(16px);
   }
 }
 
