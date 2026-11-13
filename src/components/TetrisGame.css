@@ -469,10 +469,13 @@
 /* ==========================================
    반응형 디자인
    ========================================== */
-/* PC 로고 양쪽에 같은 폭을 확보해 제목을 페이지 중앙에 정렬 */
+/* PC 상단의 로고·점수판·안내를 함께 오른쪽으로 이동 */
 @media (min-width: 901px) and (hover: hover) and (pointer: fine) {
-  .game-logo-icon {
-    width: 44px;
+  .game-logo-bar > .game-logo-icon,
+  .game-logo-bar > .game-logo-title,
+  .game-hud,
+  .game-status {
+    transform: translateX(32px);
   }
 }
 
@@ -592,10 +595,6 @@
   .game-logo-icon svg {
     width: 26px;
     height: 17px;
-  }
-
-  .game-logo-icon {
-    width: auto;
   }
 
   .logo-icon-right svg {
