@@ -469,6 +469,16 @@
 /* ==========================================
    반응형 디자인
    ========================================== */
+/* PC 상단의 로고·점수판·안내를 함께 조금 오른쪽으로 정렬 */
+@media (min-width: 901px) and (hover: hover) and (pointer: fine) {
+  .game-logo-bar > .game-logo-icon,
+  .game-logo-bar > .game-logo-title,
+  .game-hud,
+  .game-status {
+    transform: translateX(12px);
+  }
+}
+
 @media (max-width: 900px) {
   .tetris-game-wrapper {
     max-width: 100%;
