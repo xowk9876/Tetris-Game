@@ -127,7 +127,7 @@ Google Search Console과 네이버 서치어드바이저에서 HTTPS 운영 주�
 1. 배포 후 사이트맵의 3개 페이지와 RSS의 가이드 2개가 200 응답인지 확인한다. RSS는 빌드에서 실제 가이드 본문·수정일로 생성한다. 변경하지 않은 글의 날짜는 올리지 않는다.
 2. Google → Sitemaps에서 `sitemap.xml`을 제출한다. URL 검사에 홈·조작법·초보 공략 주소를 넣고 필요할 때 색인 생성을 요청한다.
 3. 네이버 → 요청 → 사이트맵 제출에서 `sitemap.xml`, RSS 제출에서 전체 `https://tetrisgame-fawn.vercel.app/rss.xml` 주소를 제출한다. 기존 피드는 자동 재방문하므로 재등록을 위해 삭제하지 않는다.
-4. 네이버 → 웹 페이지 수집에 홈·조작법·초보 공략 경로를 요청한다. 접수/처리/색인 완료를 구분해서 기록한다.
+4. 네이버 → 웹 페이지 수집에 홈·조작법·초보 공략의 전체 HTTPS URL을 요청한다. 접수/처리/색인 완료를 구분해서 기록한다.
 5. 로그인·보안문자는 계정 소유자가 처리한다. 요청이 접수되어도 수집 시점·색인·검색 순위는 보장되지 않는다. 같은 주소를 반복 요청하지 않는다.
 
 [Google 재수집 안내](https://developers.google.com/search/docs/crawling-indexing/ask-google-to-recrawl) · [네이버 피드 안내](https://searchadvisor.naver.com/guide/request-feed)
