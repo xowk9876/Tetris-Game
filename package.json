@@ -2,7 +2,7 @@
   "name": "tetris-game-react",
   "version": "1.0.0",
   "type": "module",
-  "description": "테트리스 게임 - React + Phaser 3 + 3D 디자인",
+  "description": "React와 Phaser로 만든 PC·모바일 테트리스 게임",
   "scripts": {
     "dev": "vite",
     "build": "vite build && node scripts/prerender.mjs && node --test tests/production/search.test.js",

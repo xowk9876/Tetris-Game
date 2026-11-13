@@ -96,16 +96,18 @@ npm.cmd run check
 ## 📁 프로젝트 구조
 
 ```
-Tetris-Game-main/
+Tetris-Game/
 ├── src/
 │   ├── components/
 │   │   ├── Background.jsx      # 우주 배경 컴포넌트
 │   │   ├── Background.css      # 배경 스타일
 │   │   ├── TetrisGame.jsx      # 메인 게임 컴포넌트
+│   │   ├── TouchControls.jsx   # 터치 조작 버튼
 │   │   └── TetrisGame.css      # 게임 스타일
 │   ├── utils/
 │   │   ├── gameConfig.js       # 게임 설정
 │   │   ├── gameEngine.js       # 브라우저와 독립된 게임 규칙
+│   │   ├── gameAudio.js        # 오디오 재생과 음소거
 │   │   ├── inputControls.js    # 반복 입력과 제스처
 │   │   ├── storage.js          # 안전한 환경 설정/최고 점수 저장
 │   │   └── gameClassesFull.js  # 렌더러 및 Phaser 씬
@@ -128,7 +130,7 @@ Tetris-Game-main/
 - **게임 엔진**: Phaser 3.90.0
 - **빌드 도구**: Vite 7.3.8
 - **배경 렌더링**: HTML5 Canvas
-- **게임 렌더링**: WebGL (GPU 가속)
+- **게임 렌더링**: Phaser AUTO (WebGL 지원 시 사용, 아니면 Canvas)
 - **스타일링**: CSS3
 
 ## 🌌 우주 테마 배경
@@ -200,7 +202,7 @@ Canvas 기반 동적 파티클 시스템으로 구현된 우주 배경:
 
 ### 🔎 방문
 
-[![Instagram](https://img.shields.io/badge/Instagram-@tae__system-E4405F?style=for-the-badge&logo=instagram&logoColor=white)](https://www.instagram.com/tae_system/)
+[![Instagram](https://img.shields.io/badge/Instagram-@tae_system-E4405F?style=for-the-badge&logo=instagram&logoColor=white)](https://www.instagram.com/tae_system/)
 
 **Copyright © 2026 Tae-System**
 

@@ -1,7 +1,7 @@
 {
   "name": "테트리스 - Tetris Game",
   "short_name": "Tetris",
-  "description": "클래식 테트리스를 무료로 즐기세요! 7-Bag 시스템, 홀드, 콤보, 고스트 피스를 갖춘 현대적인 테트리스 게임입니다.",
+  "description": "블록을 옮기고 회전해 가로줄을 완성하는 무료 테트리스 게임입니다. 키보드와 터치 조작, 블록 보관, 착지 위치 미리보기를 지원합니다.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",

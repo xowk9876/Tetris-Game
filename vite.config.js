@@ -10,7 +10,7 @@ export default defineConfig({
   build: {
     outDir: 'dist',
     assetsDir: 'assets',
-    // Phaser는 ~1.5MB이므로 별도 청크로 분리 → 캐싱 효율 극대화
+    // Phaser를 별도 청크로 분리해 게임 코드만 변경될 때 엔진 캐시를 재사용
     rollupOptions: {
       output: {
         manualChunks: {
