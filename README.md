@@ -16,7 +16,7 @@
 
 ![React](https://img.shields.io/badge/React-18.3.1-blue)
 ![Phaser 3](https://img.shields.io/badge/Phaser-3.90.0-blueviolet)
-![Vite](https://img.shields.io/badge/Vite-7.3.7-646CFF)
+![Vite](https://img.shields.io/badge/Vite-7.3.8-646CFF)
 
 </div>
 
@@ -41,13 +41,13 @@ Node.js 24를 사용합니다. Windows PowerShell에서는 `npm` 대신 `npm.cmd
 ### 설치
 
 ```bash
-npm ci
+npm.cmd ci
 ```
 
 ### 개발 서버 실행
 
 ```bash
-npm run dev
+npm.cmd run dev
 ```
 
 브라우저에서 `http://localhost:3000`으로 접속하세요.
@@ -55,10 +55,13 @@ npm run dev
 ### 테스트 및 프로덕션 빌드
 
 ```bash
-npm run check
+npm.cmd run check
 ```
 
-`check`는 회귀 테스트 → Vite 빌드 → 의존성 보안 검사를 실행합니다. Vercel의 `npm run build`도 `prebuild`에서 테스트를 먼저 실행합니다. 테스트 실패 시 배포 빌드가 중단됩니다.
+`check`는 회귀 테스트 → Vite 빌드 → 정적 HTML·검색 회귀 테스트 → 의존성 보안 검사를 실행합니다. Vercel의 `npm run build`도 `prebuild`에서 테스트를 먼저 실행합니다. 테스트 실패 시 배포 빌드가 중단됩니다.
+
+- [운영·업데이트 매뉴얼](docs/MAINTENANCE.md): 조작법, 점검, Windows 명령, 배포 확인, 복구
+- [2026-11-13 점검·업데이트 기록](docs/UPDATE_2026-11-13.md)
 
 빌드된 파일은 `dist/` 폴더에 생성됩니다.
 
@@ -123,7 +126,7 @@ Tetris-Game-main/
 
 - **프레임워크**: React 18.3.1
 - **게임 엔진**: Phaser 3.90.0
-- **빌드 도구**: Vite 7.3.7
+- **빌드 도구**: Vite 7.3.8
 - **배경 렌더링**: HTML5 Canvas
 - **게임 렌더링**: WebGL (GPU 가속)
 - **스타일링**: CSS3
