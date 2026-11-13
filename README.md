@@ -1,6 +1,6 @@
 # 🎮 테트리스 게임 (Tetris Game)
 
-**React + Phaser 3 + Vite**로 만든 모던한 테트리스 게임입니다.
+**React + Phaser 4 + Vite**로 만든 모던한 테트리스 게임입니다.
 
 <div align="center">
 
@@ -14,9 +14,9 @@
 
 <div align="center">
 
-![React](https://img.shields.io/badge/React-18.3.1-blue)
-![Phaser 3](https://img.shields.io/badge/Phaser-3.90.0-blueviolet)
-![Vite](https://img.shields.io/badge/Vite-7.3.8-646CFF)
+![React](https://img.shields.io/badge/React-19.3.1-blue)
+![Phaser 4](https://img.shields.io/badge/Phaser-4.2.1-blueviolet)
+![Vite](https://img.shields.io/badge/Vite-8.3.8-646CFF)
 
 </div>
 
@@ -126,9 +126,9 @@ Tetris-Game/
 
 ## 🛠 기술 스택
 
-- **프레임워크**: React 18.3.1
-- **게임 엔진**: Phaser 3.90.0
-- **빌드 도구**: Vite 7.3.8
+- **프레임워크**: React 19.3.1
+- **게임 엔진**: Phaser 4.90.0
+- **빌드 도구**: Vite 8.3.8
 - **배경 렌더링**: HTML5 Canvas
 - **게임 렌더링**: Phaser AUTO (WebGL 지원 시 사용, 아니면 Canvas)
 - **스타일링**: CSS3

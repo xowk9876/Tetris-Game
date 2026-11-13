@@ -49,12 +49,12 @@ git pull --ff-only origin main
 npm.cmd ci
 npm.cmd audit
 npm.cmd outdated
-npm.cmd view vite@7 version
+npm.cmd view vite@8 version
 ```
 
-**정상 결과:** 작업 트리 깨끗함, audit 취약점 0건. `outdated`는 새 버전이 있으면 종료 코드 1을 반환한다. 공식 릴리스와 호환성을 검토한 버전만 지정해 설치한다. 예: `npm.cmd install --save-dev --save-exact vite@7.3.8`. `package.json`과 `package-lock.json`을 함께 검토한다.
+**정상 결과:** 작업 트리 깨끗함, audit 취약점 0건. `outdated`는 새 버전이 있으면 종료 코드 1을 반환한다. 공식 릴리스와 호환성을 검토한 버전만 지정해 설치한다. 예: `npm.cmd install --save-dev --save-exact vite@8.3.8`. `package.json`과 `package-lock.json`을 함께 검토한다.
 
-React 19·Phaser 4·Vite 8 전환은 별도 호환성 작업이다. `npm audit fix --force`는 정기 점검에 사용하지 않는다.
+React 19.3.1·Phaser 4.2.1·Vite 8.3.8 전환을 검증했다. Vite 8은 `rolldownOptions.output.codeSplitting`으로 엔진·React 청크를 분리한다. 최소 브라우저 빌드 대상은 Chrome/Edge 107, Firefox 104, Safari 16으로 유지한다. `npm audit fix --force`는 정기 점검에 사용하지 않는다.
 
 직접 의존성이 최신이어도 하위 패키지는 오래될 수 있다. `npm.cmd outdated --all`로 확인하고 `npm.cmd update`로 호환 범위를 갱신한 뒤 잠금 파일의 실제 버전 변경과 플랫폼별 패키지를 검토한다. 검증은 4절의 전체 명령을 다시 실행한다.
 
@@ -72,7 +72,7 @@ git diff --stat
 git diff
 ```
 
-**정상 결과:** 게임·씬·저장·입력 테스트 55개와 빌드 후 HTML·검색 테스트 9개 통과(추후 증가 가능), Vite 빌드 성공, 취약점 0건. Phaser 청크 약 1.21MB 경고는 현재 알려진 크기 경고이며 빌드 실패가 아니다.
+**정상 결과:** 게임·씬·저장·입력 테스트 55개와 빌드 후 HTML·검색 테스트 10개 통과(추후 증가 가능), Vite 빌드 성공, 취약점 0건. Phaser 청크 약 1.37MB(압축 약 357kB) 경고는 현재 알려진 크기 경고이며 빌드 실패가 아니다.
 
 `npm.cmd run preview -- --host 127.0.0.1 --port 4173`으로 미리보기한다. 새 게임, 이동·회전·낙하·홀드, 정지/재개, 조작법, 재시작, 음소거 복원, 모바일 버튼을 확인한다. `dist`, `node_modules`, `.env*`, 인증 파일은 커밋하지 않는다. 검색 소유권 변수는 Vercel에서 관리한다.
 
@@ -92,7 +92,7 @@ git rev-parse HEAD
 
 **정상 결과:** push 성공. Vercel → `xowk9876s-projects` → `tetrisgame` → Deployments에서 해당 SHA의 **Production / READY** 확인. 운영 도메인도 그 배포를 가리켜야 한다. ERROR면 첫 빌드 오류를 수정하고 4절부터 재검증한다.
 
-배포 후 운영 사이트에서 게임 시작·정지·조작법, 브라우저 오류를 확인한다. `/how-to-play.html`, `/tetris-tips.html`, `/sitemap.xml`, `/robots.txt`도 확인한다. READY는 실제 게임 조작 검증을 대신하지 않는다.
+배포 후 운영 사이트에서 게임 시작·정지·조작법, 브라우저 오류를 확인한다. `/how-to-play.html`, `/tetris-tips.html`, `/sitemap.xml`, `/rss.xml`, `/robots.txt`도 확인한다. READY는 실제 게임 조작 검증을 대신하지 않는다.
 
 ## 6. 장애·복구·정기 점검
 
@@ -119,3 +119,15 @@ git rev-parse HEAD
 | game_over.wav | 게임 종료 |
 
 이름·형식을 변경하면 `src/utils/gameAudio.js`도 수정한다. 개발용 설명은 `docs`에 두고 `public`에 배포하지 않는다. 실제 공유 이미지는 `public/tetris-game.jpg`다. 코드에서 참조하지 않는 파일도 검색 소유권 확인·외부 서비스에서 사용할 수 있으므로 용도를 확인한 뒤 삭제한다. `dist`는 빌드로 재생성하며 소스·잠금 파일·검색 확인 파일은 보존한다.
+
+## 8. 검색 등록·수집 요청
+
+Google Search Console과 네이버 서치어드바이저에서 HTTPS 운영 주소의 기존 속성을 사용한다.
+
+1. 배포 후 사이트맵의 3개 페이지와 RSS의 가이드 2개가 200 응답인지 확인한다. RSS는 빌드에서 실제 가이드 본문·수정일로 생성한다. 변경하지 않은 글의 날짜는 올리지 않는다.
+2. Google → Sitemaps에서 `sitemap.xml`을 제출한다. URL 검사에 홈·조작법·초보 공략 주소를 넣고 필요할 때 색인 생성을 요청한다.
+3. 네이버 → 요청 → 사이트맵 제출에서 `sitemap.xml`, RSS 제출에서 전체 `https://tetrisgame-fawn.vercel.app/rss.xml` 주소를 제출한다. 기존 피드는 자동 재방문하므로 재등록을 위해 삭제하지 않는다.
+4. 네이버 → 웹 페이지 수집에 홈·조작법·초보 공략 경로를 요청한다. 접수/처리/색인 완료를 구분해서 기록한다.
+5. 로그인·보안문자는 계정 소유자가 처리한다. 요청이 접수되어도 수집 시점·색인·검색 순위는 보장되지 않는다. 같은 주소를 반복 요청하지 않는다.
+
+[Google 재수집 안내](https://developers.google.com/search/docs/crawling-indexing/ask-google-to-recrawl) · [네이버 피드 안내](https://searchadvisor.naver.com/guide/request-feed)

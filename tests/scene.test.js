@@ -2,11 +2,14 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { getEventListeners } from 'node:events';
 import { registerHooks } from 'node:module';
-import Emitter from 'phaser/src/events/EventEmitter.js';
 
 // Load the real Scene and lifecycle events without the DOM-dependent Phaser renderer.
-const sceneUrl = import.meta.resolve('phaser/src/scene/Scene.js');
-const eventsUrl = import.meta.resolve('phaser/src/scene/events/index.js');
+// Phaser 4 exports its browser bundle and package.json; resolve test-only source
+// files relative to that manifest so production imports use the public entry.
+const phaserManifest = import.meta.resolve('phaser/package.json');
+const { default: Emitter } = await import(new URL('src/events/EventEmitter.js', phaserManifest).href);
+const sceneUrl = new URL('src/scene/Scene.js', phaserManifest).href;
+const eventsUrl = new URL('src/scene/events/index.js', phaserManifest).href;
 const nodePhaser = `import Scene from '${sceneUrl}'; import Events from '${eventsUrl}'; export default { Scene, Scenes: { Events } };`;
 const hook = registerHooks({
     resolve(specifier, context, next) {

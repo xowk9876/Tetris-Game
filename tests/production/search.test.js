@@ -9,6 +9,25 @@ const dist = new URL('../../dist/', import.meta.url)
 const read = path => readFile(new URL(path, dist), 'utf8')
 const publicPages = ['index.html', 'how-to-play.html', 'tetris-tips.html']
 
+test('RSS exposes complete guides with canonical links and their actual modification dates', async () => {
+  const rss = await read('rss.xml')
+  const items = [...rss.matchAll(/<item>([\s\S]*?)<\/item>/g)].map(match => match[1])
+  assert.equal(items.length, 2)
+  for (const [index, page] of publicPages.slice(1).entries()) {
+    const html = await read(page)
+    const date = html.match(/<time datetime="([^"]+)"/)[1]
+    assert.ok(items[index].includes('<link>' + site + '/' + page + '</link>'))
+    assert.ok(items[index].includes('<pubDate>' + new Date(date + 'T00:00:00+09:00').toUTCString() + '</pubDate>'))
+    for (const [, heading] of html.matchAll(/<h2[^>]*>([\s\S]*?)<\/h2>/g)) {
+      assert.ok(items[index].includes(heading), 'missing full guide section: ' + heading)
+    }
+    assert.doesNotMatch(items[index], /(?:href|src)="(?:\/|#)/)
+  }
+  for (const page of publicPages) {
+    assert.ok((await read(page)).split('</head>')[0].includes('href="' + site + '/rss.xml"'))
+  }
+})
+
 test('guide schemas agree with visible headings, breadcrumbs and modification dates', async () => {
   const sitemap = await read('sitemap.xml')
   for (const page of publicPages.slice(1)) {
