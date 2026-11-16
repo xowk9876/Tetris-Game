@@ -10,6 +10,9 @@ const marker = '<!--app-html-->'
 if (!html.includes(marker)) throw new Error('게임 화면을 넣을 HTML 위치를 찾을 수 없습니다.')
 
 const vite = await createServer({
+  // SSR uses different optimizer settings. Sharing the dev cache deletes the
+  // live server's Phaser prebundle when a build runs alongside local preview.
+  cacheDir: 'node_modules/.vite-prerender',
   appType: 'custom',
   server: { middlewareMode: true, hmr: false, watch: null },
   optimizeDeps: { noDiscovery: true, include: [] },

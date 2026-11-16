@@ -46,7 +46,11 @@ function TetrisGame() {
       })
       gameRef.current = game
     }
-    startGame().catch(() => { if (!disposed) setBootError(true) })
+    startGame().catch(error => {
+      if (disposed) return
+      console.error('테트리스 초기화 실패:', error)
+      setBootError(true)
+    })
     return () => {
       disposed = true
       game?.events.off('tetris-state', receiveState)
