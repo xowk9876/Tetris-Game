@@ -25,12 +25,13 @@ function TouchControls({ gameRef, containerRef, disabled }) {
     }
     const move = event => gesture.move(event.pointerId, event.clientX, event.clientY)
     const up = event => gesture.end(event.pointerId, event.clientX, event.clientY, event.timeStamp)
+    const cancelGesture = event => gesture.cancel(event.pointerId)
     const visibility = () => { if (document.hidden) cancel() }
     container.addEventListener('pointerdown', down)
     container.addEventListener('pointermove', move)
     container.addEventListener('pointerup', up)
-    container.addEventListener('pointercancel', cancel)
-    container.addEventListener('lostpointercapture', cancel)
+    container.addEventListener('pointercancel', cancelGesture)
+    container.addEventListener('lostpointercapture', cancelGesture)
     window.addEventListener('blur', cancel)
     document.addEventListener('visibilitychange', visibility)
     return () => {
@@ -38,8 +39,8 @@ function TouchControls({ gameRef, containerRef, disabled }) {
       container.removeEventListener('pointerdown', down)
       container.removeEventListener('pointermove', move)
       container.removeEventListener('pointerup', up)
-      container.removeEventListener('pointercancel', cancel)
-      container.removeEventListener('lostpointercapture', cancel)
+      container.removeEventListener('pointercancel', cancelGesture)
+      container.removeEventListener('lostpointercapture', cancelGesture)
       window.removeEventListener('blur', cancel)
       document.removeEventListener('visibilitychange', visibility)
       repeaterRef.current = null

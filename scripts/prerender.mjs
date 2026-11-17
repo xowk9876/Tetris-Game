@@ -53,7 +53,7 @@ const items = guides.map(guide => `<item>
   <guid isPermaLink="true">${guide.url}</guid>
   <description>${escapeXml(guide.description)}</description>
   <content:encoded><![CDATA[${guide.body.replace(/]]>/g, ']]]]><![CDATA[>')}]]></content:encoded>
-  <pubDate>${rssDate(guide.dateModified)}</pubDate>
+  <pubDate>${rssDate(guide.datePublished)}</pubDate>
 </item>`).join('\n')
 await writeFile(new URL('rss.xml', entry), `<?xml version="1.0" encoding="UTF-8"?>
 <rss version="2.0" xmlns:content="http://purl.org/rss/1.0/modules/content/" xmlns:atom="http://www.w3.org/2005/Atom">

@@ -41,6 +41,6 @@ export function createGesture(action) {
         action(dy < 0 ? 'hold' : dy / dt >= 0.75 ? 'hardDrop' : 'softDrop');
       }
     },
-    cancel() { active = null; }
+    cancel(id) { if (id === undefined || active?.id === id) active = null; }
   };
 }

@@ -1,8 +1,8 @@
 # 테트리스 사용·운영·업데이트 매뉴얼
 
-기준일: 2026-11-13. 저장소 `xowk9876/Tetris-Game`, Vercel 팀 `xowk9876s-projects`, 프로젝트 `tetrisgame`, 운영 브랜치 `main`.
+기준일: 2026-11-18. 저장소 `xowk9876/Tetris-Game`, Vercel 팀 `xowk9876s-projects`, 프로젝트 `tetrisgame`, 운영 브랜치 `main`.
 
-[운영 사이트](https://tetrisgame-fawn.vercel.app/) · [상세 조작법](https://tetrisgame-fawn.vercel.app/how-to-play.html) · [초보 공략](https://tetrisgame-fawn.vercel.app/tetris-tips.html) · [이번 점검 기록](UPDATE_2026-11-13.md)
+[운영 사이트](https://tetrisgame-fawn.vercel.app/) · [상세 조작법](https://tetrisgame-fawn.vercel.app/how-to-play.html) · [초보 공략](https://tetrisgame-fawn.vercel.app/tetris-tips.html) · [이번 점검 기록](UPDATE_2026-11-18.md)
 
 ## 1. 사용자 조작
 
@@ -124,7 +124,7 @@ git rev-parse HEAD
 
 Google Search Console과 네이버 서치어드바이저에서 HTTPS 운영 주소의 기존 속성을 사용한다.
 
-1. 배포 후 사이트맵의 3개 페이지와 RSS의 가이드 2개가 200 응답인지 확인한다. RSS는 빌드에서 실제 가이드 본문·수정일로 생성한다. 변경하지 않은 글의 날짜는 올리지 않는다.
+1. 배포 후 사이트맵의 3개 페이지와 RSS의 가이드 2개가 200 응답인지 확인한다. RSS의 항목 발행일은 가이드의 최초 공개일이고, 채널 변경일은 가장 최근 가이드 수정일이다. 사이트맵과 가이드 본문의 수정일은 실질적인 변경이 있을 때만 갱신한다.
 2. Google → Sitemaps에서 `sitemap.xml`을 제출한다. URL 검사에 홈·조작법·초보 공략 주소를 넣고 필요할 때 색인 생성을 요청한다.
 3. 네이버 → 요청 → 사이트맵 제출에서 `sitemap.xml`, RSS 제출에서 전체 `https://tetrisgame-fawn.vercel.app/rss.xml` 주소를 제출한다. 기존 피드는 자동 재방문하므로 재등록을 위해 삭제하지 않는다.
 4. 네이버 → 웹 페이지 수집에 홈·조작법·초보 공략의 전체 HTTPS URL을 요청한다. 접수/처리/색인 완료를 구분해서 기록한다.

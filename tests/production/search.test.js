@@ -9,20 +9,24 @@ const dist = new URL('../../dist/', import.meta.url)
 const read = path => readFile(new URL(path, dist), 'utf8')
 const publicPages = ['index.html', 'how-to-play.html', 'tetris-tips.html']
 
-test('RSS exposes complete guides with canonical links and their actual modification dates', async () => {
+test('RSS keeps guide publication dates stable and reports the latest content change', async () => {
   const rss = await read('rss.xml')
   const items = [...rss.matchAll(/<item>([\s\S]*?)<\/item>/g)].map(match => match[1])
   assert.equal(items.length, 2)
+  const modified = []
   for (const [index, page] of publicPages.slice(1).entries()) {
     const html = await read(page)
-    const date = html.match(/<time datetime="([^"]+)"/)[1]
+    const article = JSON.parse(html.match(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/)[1])['@graph'].find(node => node['@type'] === 'Article')
+    modified.push(article.dateModified)
+    assert.ok(article.datePublished <= article.dateModified)
     assert.ok(items[index].includes('<link>' + site + '/' + page + '</link>'))
-    assert.ok(items[index].includes('<pubDate>' + new Date(date + 'T00:00:00+09:00').toUTCString() + '</pubDate>'))
+    assert.ok(items[index].includes('<pubDate>' + new Date(article.datePublished + 'T00:00:00+09:00').toUTCString() + '</pubDate>'))
     for (const [, heading] of html.matchAll(/<h2[^>]*>([\s\S]*?)<\/h2>/g)) {
       assert.ok(items[index].includes(heading), 'missing full guide section: ' + heading)
     }
     assert.doesNotMatch(items[index], /(?:href|src)="(?:\/|#)/)
   }
+  assert.ok(rss.includes('<lastBuildDate>' + new Date(modified.sort().at(-1) + 'T00:00:00+09:00').toUTCString() + '</lastBuildDate>'))
   for (const page of publicPages) {
     assert.ok((await read(page)).split('</head>')[0].includes('href="' + site + '/rss.xml"'))
   }
@@ -145,4 +149,8 @@ test('the beginner guide is linked in static HTML and its scoring example matche
   game.handleLineClear(4)
   const secondScore = (game.score - firstScore).toLocaleString('ko-KR')
   assert.ok(tips.includes('<strong>' + secondScore + '점</strong>'))
+  const previousScore = game.score
+  game.handleLineClear(4)
+  const comboScore = (game.score - previousScore).toLocaleString('ko-KR')
+  assert.ok(tips.includes('<strong>' + comboScore + '점</strong>'))
 })

@@ -6,6 +6,18 @@ for (const [label,x,y,time,expected] of [['tap',2,3,80,'rotate'],['up',0,-80,200
 }
 test('cancelled gesture never drops or rotates',()=>{const out=[],g=createGesture(a=>out.push(a));g.start(1,0,0,0);g.cancel();g.end(1,0,100,50);assert.deepEqual(out,[]);});
 test('second pointer cannot steal or finish a gesture',()=>{const out=[],g=createGesture(a=>out.push(a));g.start(1,0,0,0);g.start(2,0,0,0);g.end(2,0,100,50);assert.deepEqual(out,[]);g.end(1,0,0,100);assert.deepEqual(out,['rotate']);});
+test('releasing another pointer capture does not cancel an active swipe', () => {
+  const actions = [];
+  const gesture = createGesture(action => actions.push(action));
+  gesture.start(11, 100, 100, 0);
+  gesture.cancel(12);
+  gesture.end(11, 160, 100, 100);
+  assert.deepEqual(actions, ['right', 'right']);
+  gesture.start(13, 100, 100, 120);
+  gesture.cancel(13);
+  gesture.end(13, 100, 180, 160);
+  assert.deepEqual(actions, ['right', 'right']);
+});
 test('horizontal swipe accumulates cells and never becomes a drop',()=>{const out=[],g=createGesture(a=>out.push(a));g.start(1,0,0,0);g.move(1,55,0);g.end(1,55,150,100);assert.deepEqual(out,['right','right']);});
 test('a horizontal swipe consumes the release position exactly once on either side', () => {
   for (const direction of [-1, 1]) {
