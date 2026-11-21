@@ -171,7 +171,7 @@ function TetrisGame() {
 
         <div className="game-status">
           <span role="status" aria-live="polite" data-nosnippet="">
-            {bootError ? '게임을 불러오지 못했어요. 페이지를 새로고침해 주세요.' : !status.ready ? '게임 불러오는 중…' : status.gameOver ? '게임 종료 · 새 게임으로 다시 시작하세요.' : status.paused ? '일시정지 · 계속하기를 눌러 재개하세요.' : '게임 진행 중'}
+            {bootError ? '게임을 불러오지 못했어요. 새로고침해 주세요.' : !status.ready ? '게임 불러오는 중…' : status.gameOver ? '게임 종료' : status.paused ? '일시정지' : '게임 진행 중'}
           </span>
           <a href="/how-to-play.html" target="_blank" rel="noopener" aria-label="테트리스 조작법·점수표 (새 탭)">테트리스 조작법·점수표</a>
           <a href="/tetris-tips.html" target="_blank" rel="noopener" aria-label="테트리스 초보 공략 (새 탭)">초보 공략</a>
@@ -201,17 +201,15 @@ function TetrisGame() {
         <div className="help-modal-content">
           <h2 id="help-title">🎮 조작법</h2>
           <div className="help-content">
-            <p>블록을 돌리고 옮겨 가로 한 줄을 빈틈없이 채우면 줄이 사라지고 점수를 얻어요. 블록의 착지 위치는 윤곽선으로 확인할 수 있어요.</p>
-            <p><strong>← →</strong> : 좌우 이동</p>
-            <p><strong>↑</strong> : 블록 회전</p>
-            <p><strong>↓</strong> : 소프트 드롭 (빠른 낙하)</p>
-            <p><strong>Space</strong> : 하드 드롭 (즉시 낙하)</p>
-            <p><strong>C</strong> : 홀드 (블록 보관)</p>
-            <p><strong>P</strong> : 일시정지 / 계속하기</p>
-            <h3>휴대폰 · 태블릿</h3>
-            <p>화면 아래 이동 버튼을 길게 누르면 반복해서 움직여요. <a href="/how-to-play.html#mobile-controls" target="_blank" rel="noopener" aria-label="터치 버튼 그림 보기 (새 탭)">터치 버튼 그림 보기</a></p>
-            <p>게임판 탭: 회전 · 좌우 밀기: 이동 · 위로 밀기: 홀드 · 아래로 빠르게 밀기: 즉시 낙하</p>
-            <p>홀드는 블록 하나당 한 번 사용할 수 있어요. 조작법을 닫은 뒤 계속하기를 누르면 게임이 재개됩니다.</p>
+            <p>가로 10칸을 채우면 줄이 사라져요. 옅은 윤곽선은 블록이 떨어질 자리예요.</p>
+            <h3>키보드</h3>
+            <p><strong>← →</strong> 좌우 이동 · <strong>↑</strong> 회전</p>
+            <p><strong>↓</strong> 빠르게 내리기 · <strong>Space</strong> 즉시 낙하</p>
+            <p><strong>C</strong> 홀드(블록당 한 번) · <strong>P</strong> 일시정지 또는 계속하기</p>
+            <h3>휴대폰·태블릿</h3>
+            <p>게임판을 탭하면 회전하고, 좌우로 밀면 이동해요. 위로 밀면 홀드, 아래로 빠르게 밀면 즉시 낙하예요.</p>
+            <p>한 칸만 옮기려면 이동 버튼을 한 번 누르세요. 길게 누르면 계속 움직여요. <a href="/how-to-play.html#mobile-controls" target="_blank" rel="noopener" aria-label="터치 버튼 그림 보기 (새 탭)">터치 버튼 그림 보기</a></p>
+            {status.paused && <p>조작법을 닫고 ‘계속하기’를 누르면 게임이 이어져요.</p>}
           </div>
           <button id="close-help" className="close-help-btn" onClick={() => helpModalRef.current?.close()}>닫기</button>
         </div>

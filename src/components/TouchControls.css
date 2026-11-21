@@ -25,39 +25,11 @@
 
 /* ── 힌트 바 ─────────────────────────────────────────────── */
 .tc-hint {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
+  margin: 0;
   padding-bottom: 2px;
-}
-
-.tc-hint-text {
-  font-family: 'Exo 2', sans-serif;
-  font-size: 10px;
-  color: rgba(0, 245, 255, 0.28);
-  letter-spacing: 0.7px;
-  text-align: center;
-}
-
-.tc-hint-arrow {
   font-size: 11px;
-  color: rgba(0, 245, 255, 0.22);
-  animation: hint-pulse 2.4s ease-in-out infinite;
-}
-
-.tc-hint-arrow:first-child {
-  animation-name: hint-left;
-}
-
-@keyframes hint-pulse {
-  0%, 100% { opacity: 0.22; transform: translateX(0); }
-  50%       { opacity: 0.55; transform: translateX(3px); }
-}
-
-@keyframes hint-left {
-  0%, 100% { opacity: 0.22; transform: translateX(0); }
-  50%       { opacity: 0.55; transform: translateX(-3px); }
+  color: #b9c8df;
+  text-align: center;
 }
 
 /* ── 패드 레이아웃: 좌(LEFT+RIGHT) | 구분선 | 우(HOLD+ROTATE+HARD) ── */
@@ -274,7 +246,6 @@
     height: 20px;
   }
 
-  .tc-hint-text { font-size: 9px; }
 }
 
 .tc-btn { touch-action: none; }

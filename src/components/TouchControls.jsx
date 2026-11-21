@@ -70,12 +70,7 @@ function TouchControls({ gameRef, containerRef, disabled }) {
   return (
     <div className="tc-wrap" aria-label="터치 컨트롤" role="group">
 
-      {/* 힌트 */}
-      <div className="tc-hint" aria-hidden="true">
-        <span className="tc-hint-arrow">←</span>
-        <span className="tc-hint-text">캔버스 탭·스와이프 또는 버튼으로 조작</span>
-        <span className="tc-hint-arrow">→</span>
-      </div>
+      <p className="tc-hint">게임판을 탭하면 회전하고, 좌우로 밀면 이동해요.</p>
 
       <div className="tc-pad">
 
